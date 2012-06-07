@@ -1,0 +1,16 @@
+title: El titulo del contenido
+subtitle : El subtítulo del contenido
+description: Descripción del contenido
+summary: El colegio a distancia en la comuna "los ríos", parroquia Chontapunta, província Napo, Ecuador
+author: Nombre de la persona que lo ha escrito.
+categories: anonims
+language: El lenguaje en el que está escrito (es, en, ca, ...) (debe corresponder a un locale válido)
+type: El tipo de contenido (debe corresponder a un tipo válido)
+keywords: voluntariado, Ecuador, Comuna los ríos
+creation_date: Fecha de creación en el formato  (ejemplo: 2012-02-01T15:00:00+01:00)
+media: /media/comuna-los-rios-01.jpg
+owner: Propietario del documento (el usuario que lo ha creado)
+group: El grupo al que pertenece el documento
+modifiers: Los modificadores de acceso (3 series RWA que corresponden permisos owner, group, all)
+
+Aqui empezará el texto del contenido
