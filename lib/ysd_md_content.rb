@@ -65,7 +65,7 @@ module ContentManagerSystem
       
       end
       
-      puts "categories : #{@full_categories}"
+      #puts "categories : #{@full_categories}"
       
       @full_categories
      
@@ -78,16 +78,8 @@ module ContentManagerSystem
     #  The term id
     #
     def self.get_contents_by_term(term_id)
-    
-      #condition = "for (idx in this.categories){ if (this.categories[idx] == #{term_id} || (this.categories[idx] instanceof Array && this.categories[idx].indexOf('#{term_id}') > -1)) {return true}else{return false}}"
-           
-      #puts "condition : #{condition}"
-      
-      #Content.all({:conditions => {'$where' => condition}, :order => [['creation_date','desc']]} )
-    
+        
       result = Content.all({:conditions => {:categories => [term_id.to_i]}, :order => [['creation_date','desc']]})
-    
-      puts "GET_CONTENTS_BY_TERM : #{result.to_json}"
       
       result
     

@@ -2,15 +2,9 @@ require 'dm-types'
 require 'data_mapper' 
 require 'ysd-persistence' if not defined?(Persistence)
 
-#
-# DataMapper.setup(:default, {:adapter => 'yaml', :path => '/Users/jgil/proyectos/yurak.sisa/implementacion/data'})
-# Persistence.setup(:default, { :adapter => 'mongodb', :host => 'staff.mongohq.com', :port => '10049', :database => 'yurak_sisa', :username => 'yurak.sisa', :password => 'joanic2002' })
-# Persistence.setup(:memory, {:adapter=>'memory'})
-# Persistence.repository(:memory) do ResourceLoader.instance.load_files(ContentManagerSystem::Content, File.join('/Users/jgil/proyectos/yurak.sisa/implementacion','content')) end
-#
-#
 module ContentManagerSystem
 
+  #
   # It represents a view of data
   # 
   #

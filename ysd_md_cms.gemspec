@@ -7,6 +7,11 @@ Gem::Specification.new do |s|
   s.files   = Dir['lib/**/*.rb']
   s.summary = "Yurak Sisa Content Manager System model"
   
-  s.add_runtime_dependency "ysd-persistence"
-  s.add_runtime_dependency "ysd_md_auditory"
+  s.add_runtime_dependency "data_mapper", "1.1.0"
+  s.add_runtime_dependency "dm-types", "1.1.0"  
+  
+  s.add_runtime_dependency "ysd-persistence"      # Persistence system
+  s.add_runtime_dependency "ysd_md_auditory"      # Audit information
+  s.add_runtime_dependency "ysd_md_profile"       # Profiles 
+  
 end
