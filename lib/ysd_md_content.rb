@@ -1,4 +1,5 @@
 require 'ysd-persistence' 
+require 'ysd_md_auditory' if not defined?Auditory
 require 'ysd-md-profile' if not defined?Users
 module ContentManagerSystem
 
