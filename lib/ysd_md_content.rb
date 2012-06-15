@@ -1,4 +1,6 @@
 require 'ysd-persistence' 
+require 'uuid'
+require 'base64'
 require 'ysd_md_auditory' if not defined?Auditory
 require 'ysd-md-profile' if not defined?Users
 module ContentManagerSystem
@@ -11,7 +13,7 @@ module ContentManagerSystem
     include Users::ResourceAccessControl # Extends the model to control its access
     include Auditory::AuditoryInfo       # Extends the model adding auditory
     
-    property :clear_id      # The id without the language information (to create a link to the content)
+    property :alias         # An URL alias to the content
     property :title         # The content title
     property :subtitle      # The content subtitle
     property :description   # The content description
@@ -28,6 +30,30 @@ module ContentManagerSystem
 
     property :body          # The content
 
+    #
+    # Create a new content
+    #
+    # @param [Hash] options
+    #
+    #  Content attributes
+    #
+    #
+    def self.create(options)
+      
+      # creates the ID
+      key = UUID.generator.generate(:compact)
+          
+      # creates the alias
+           
+      content = Content.new(key, options)      
+      content.attribute_set(:alias, File.join(content.type, Time.now.strftime('%Y%m%d') , content.title.downcase.gsub(/\s/,'-')))
+      
+      content.create
+      
+      content
+    
+    end
+    
     #
     # Gets the alias path to include a link to the content
     #
@@ -52,7 +78,9 @@ module ContentManagerSystem
        
         categories_list = []
      
-        if categories_by_taxonomy and categories_by_taxonomy.kind_of?Array    
+        #puts "categories by taxonomy : #{categories_by_taxonomy}"
+     
+        if categories_by_taxonomy and categories_by_taxonomy.kind_of?Hash    
           categories_by_taxonomy.each do |taxonomy, terms|
             if terms.kind_of?(Array)
               categories_list.concat(terms)   
@@ -62,11 +90,13 @@ module ContentManagerSystem
           end
         end
         
+        #puts "categories list: #{categories_list} #{categories_by_taxonomy} #{categories_by_taxonomy.class.name}"
+        
         @full_categories = ContentManagerSystem::Term.all(:id => categories_list)
       
       end
       
-      #puts "categories : #{@full_categories}"
+      #puts "categories: #{@full_categories}"
       
       @full_categories
      
