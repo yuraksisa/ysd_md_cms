@@ -10,8 +10,8 @@ module ContentManagerSystem
   # -------------------------------------
   class Content
     include Persistence::Resource
-    include Users::ResourceAccessControl # Extends the model to control its access
-    include Auditory::AuditoryInfo       # Extends the model adding auditory
+    include Users::ResourceAccessControlPersistence # Extends the model to control its access
+    include Audit::AuditorPersistence               # Extends the model to add audit information
     
     property :alias         # An URL alias to the content
     property :title         # The content title
@@ -110,9 +110,9 @@ module ContentManagerSystem
     #
     def self.get_contents_by_term(term_id)
         
-      result = Content.all({:conditions => {:categories => [term_id.to_i]}, :order => [['creation_date','desc']]})
+      #result = Content.all({:conditions => {:categories => [term_id.to_i]}, :order => [['creation_date','desc']]})
       
-      result
+      Content.all({:conditions => Conditions::Comparison.new(:categories, '$in', [term_id.to_i]), :order => [['creation_date','desc']]})
     
     end
     
