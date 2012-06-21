@@ -30,6 +30,58 @@ module ContentManagerSystem
 
     property :body          # The content
 
+    # ========================= Finders ===========================
+    
+    #
+    # @param [Hash] options
+    #   
+    #   :limit
+    #   :offset
+    #   :count
+    #
+    # @return [Array]
+    #
+    #   Instances of ContentManagerSystem::Content
+    #
+    def self.find_all(options)
+    
+      limit = options[:limit] || 10
+      offset = options[:offset] || 0
+      count = options[:count] || true
+    
+      result = []
+      
+      result << Content.all({:limit => limit, :offset => offset, :order => [['creation_date','desc']]})
+      
+      if count
+        result << Content.count
+      end
+      
+      if result.length == 1
+        result = result.first
+      end
+      
+      result
+              
+    end
+    
+    #
+    # Retrieve the contents which belong to a category
+    # 
+    # @param [String] term_id
+    #  The term id
+    #
+    def self.find_by_term(term_id)
+        
+      #result = Content.all({:conditions => {:categories => [term_id.to_i]}, :order => [['creation_date','desc']]})
+      
+      Content.all({:conditions => Conditions::Comparison.new(:categories, '$in', [term_id.to_i]), :order => [['creation_date','desc']]})
+    
+    end    
+    
+    
+    # ======================= Class methods =======================
+
     #
     # Create a new content
     #
@@ -38,10 +90,19 @@ module ContentManagerSystem
     #  Content attributes
     #
     #
-    def self.create(options)
+    def self.create(*args)
+      
+      if (args.size == 1)
+        options = args.first
+      else
+        if (args.size == 2)
+          key = args.first
+          options = args.last
+        end
+     end
       
       # creates the ID
-      key = UUID.generator.generate(:compact)
+      key ||= UUID.generator.generate(:compact)
           
       # creates the alias
            
@@ -53,6 +114,8 @@ module ContentManagerSystem
       content
     
     end
+    
+    # ============== Instance methods =====================
     
     #
     # Gets the alias path to include a link to the content
@@ -100,20 +163,6 @@ module ContentManagerSystem
       
       @full_categories
      
-    end
-    
-    #
-    # Retrieve the contents which belong to a category
-    # 
-    # @param [String] term_id
-    #  The term id
-    #
-    def self.get_contents_by_term(term_id)
-        
-      #result = Content.all({:conditions => {:categories => [term_id.to_i]}, :order => [['creation_date','desc']]})
-      
-      Content.all({:conditions => Conditions::Comparison.new(:categories, '$in', [term_id.to_i]), :order => [['creation_date','desc']]})
-    
     end
     
     # Serializes the object to json
