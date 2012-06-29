@@ -43,7 +43,7 @@ module ContentManagerSystem
     #
     #   Instances of ContentManagerSystem::Content
     #
-    def self.find_all(options)
+    def self.find_all(options={})
     
       limit = options[:limit] || 10
       offset = options[:offset] || 0
