@@ -18,6 +18,78 @@ module ContentManagerSystem
     property :weight, Integer, :field => 'weight', :default => 0
     property :title, String, :field => 'title', :length => 64
     
+    property :show_block_on_anonymous_user, Boolean, :field => 'show_block_on_anonymous_user', :default => true
+    has n, :block_usergroups, 'BlockUserGroup', :child_key => [:block_id, :usergroup_group] , :parent_key => [:id], :constraint => :destroy
+    
+    property :show_block_on_page, Integer, :field => 'show_block_on_page', :default => 1 # 1-all pages except list 2-only listed pages
+    property :show_block_on_page_list, Text, :field => 'show_block_on_page_list'
+    
+    alias old_save save
+    
+    #
+    # Check if the block should be shown
+    #
+    # show_block_on_anonymous_user => The block will be shown if there is not a connected user
+    # 
+    # @return [Boolean]
+    #   true if the block can be show for the user and path
+    #
+    def can_be_shown?(user, path)
+    
+      can_show = false
+    
+      if show_block_on_anonymous_user
+        can_show = user.nil?
+      end
+        
+      if (not can_show) and (not user.nil?)
+                       
+        can_show = (BlockUserGroup.count('block.id'=>id, 'usergroup.group'=>user.usergroups) > 0)
+        
+      end
+      
+      puts "can show : #{can_show}"
+      
+      can_show
+      
+    
+    end
+    
+    #
+    # Assign a new usergroup list to the block
+    #
+    # @param [Array] new_usergroups
+    #
+    #   A list of Users::UserGroup identifiers
+    #
+    #
+    def assign_usergroups(new_usergroups)
+        
+      # Remove all block user groups which doesn't belong to the block
+      BlockUserGroup.all(:block => {:id => id}, 
+                         :usergroup => {:group.not => new_usergroups}).destroy
+
+      # Insert the new block usergroups
+      new_usergroups.each do |user_group|     
+          if not BlockUserGroup.get(id, user_group)
+            BlockUserGroup.create({:block => self, :usergroup => Users::UserGroup.get(user_group) })
+          end
+      end
+      
+      block_usergroups.reload
+      
+    end
+                
+    #
+    #
+    #
+    def save
+                      
+      old_save
+      
+    end
+    
+    
     #
     # Rehash blocks : Create news and delete those which does not exist
     #

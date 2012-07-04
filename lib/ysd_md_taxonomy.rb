@@ -19,27 +19,36 @@ module ContentManagerSystem
     has n, :taxonomy_content_types, 'TaxonomyContentType', :child_key => [:taxonomy_id, :content_type_id], :parent_key => [:id], :constraint => :destroy
 
     alias old_save save
+
+    #
+    # Assign a new usergroup list to the block
+    #
+    # @param [Array] new_content_types
+    #
+    #   A list of ContentType identifiers
+    #
+    #
+    def assign_content_types(new_content_types)
+        
+      # Remove all taxonomy content types which doesn't belong to the taxonomy
+      TaxonomyContentType.all(:block => {:id => id}, 
+                         :usergroup => {:group.not => new_content_types}).destroy
+
+      # Insert the new taxonomy content types
+      new_content_types.each do |ct_id|     
+          if not TaxonomyContentType.get(id, ct_id)
+            TaxonomyContentType.create({:taxonomy => self, :content_type => ContentType.get(ct_id) })
+          end
+      end
+      
+      taxonomy_content_types.reload
+      
+    end
         
     #
     #
     #
     def save
-      
-      # Remove all taxonomy content types which have been removed
-      content_types = self.taxonomy_content_types.map do |tct| tct.content_type.id end   
-      ContentManagerSystem::TaxonomyContentType.all(:taxonomy => {:id => self.id}, :content_type => {:id.not => content_types}).destroy
-
-      # Reload all existing taxonomies content types
-      self.taxonomy_content_types = self.taxonomy_content_types.map do |tct|      
-        _tct = TaxonomyContentType.get(tct.taxonomy.id, tct.content_type.id)
-        if _tct
-          _tct
-        else
-          tct
-        end
-      end
-    
-      puts "saving Taxonomy #{id} tct = #{self.taxonomy_content_types.to_json}"
       
       old_save
     
