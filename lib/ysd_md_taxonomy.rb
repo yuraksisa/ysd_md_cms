@@ -31,8 +31,8 @@ module ContentManagerSystem
     def assign_content_types(new_content_types)
         
       # Remove all taxonomy content types which doesn't belong to the taxonomy
-      TaxonomyContentType.all(:block => {:id => id}, 
-                         :usergroup => {:group.not => new_content_types}).destroy
+      TaxonomyContentType.all(:taxonomy => {:id => id}, 
+                              :content_type => {:id.not => new_content_types}).destroy
 
       # Insert the new taxonomy content types
       new_content_types.each do |ct_id|     

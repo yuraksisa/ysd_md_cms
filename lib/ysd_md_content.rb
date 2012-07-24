@@ -21,7 +21,7 @@ module ContentManagerSystem
     property :keywords      # The key words (important words)
           
     property :type          # The content type (it must exist the ContentManagerSystem::ContentType)
-    property :categories    # The content category
+    property :categories    # The content category (an array of ContentManagerSystem::Term)
     property :categories_by_taxonomy # The categories organized by taxonomy
     
     property :language      # The language in which the content has been written
