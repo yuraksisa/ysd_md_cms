@@ -171,13 +171,24 @@ module ContentManagerSystem
     # 
     def to_json(options={})
  
-      data = attributes.clone
-      data.store(:key, self.key)
-      data.store(:categories_info, self.get_categories)
-    
+      data = exportable_attributes
       data.to_json
   
     end 
+    
+    #
+    # Get a hash with the exportable attributes
+    #
+    def exportable_attributes
+            
+      data = super
+      
+      data.store(:key, self.key)
+      data.store(:categories_info, self.get_categories)     
+    
+      data
+    
+    end
     
     
   end #end class Content 
