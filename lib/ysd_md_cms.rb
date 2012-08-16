@@ -1,5 +1,6 @@
 require 'ysd_md_content'
 require 'ysd_md_content_type'
+require 'ysd_md_content_type_aspect'
 require 'ysd_md_taxonomy'
 require 'ysd_md_taxonomy_content_type'
 require 'ysd_md_term'
