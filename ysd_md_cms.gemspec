@@ -13,5 +13,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "ysd-persistence"      # Persistence system
   s.add_runtime_dependency "ysd_md_auditory"      # Audit information
   s.add_runtime_dependency "ysd_md_profile"       # Profiles 
+  s.add_runtime_dependency "ysd_core_plugins"     # Plugins
   
 end

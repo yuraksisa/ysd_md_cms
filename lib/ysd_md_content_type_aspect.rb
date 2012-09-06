@@ -1,4 +1,6 @@
 require 'data_mapper' if not defined?(DataMapper)
+require 'ysd-plugins_aspect_configuration' unless defined?Plugins::AspectConfiguration
+
 module ContentManagerSystem
 
   #
@@ -6,6 +8,7 @@ module ContentManagerSystem
   #
   class ContentTypeAspect
     include DataMapper::Resource
+    include ::Plugins::AspectConfiguration
     
     storage_names[:default] = 'cms_content_type_aspects'
     
@@ -28,6 +31,25 @@ module ContentManagerSystem
       old_save
     
     end
+    
+    #
+    # Gets the variable name which stores the param value for the entity/aspect
+    #
+    def get_variable_name(attribute_id)
+     
+      "aspect.#{aspect}.ct.#{content_type.id}.#{attribute_id}"
+     
+    end
+    
+    #
+    # Gets the module name
+    #
+    def get_module_name
+    
+      return :cms
+    
+    end    
+
      
   end
 end

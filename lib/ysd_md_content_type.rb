@@ -58,6 +58,17 @@ module ContentManagerSystem
       return ct_aspects
       
     end
+    
+    #
+    # Get a concrete aspects associated to the resource (::Model::EntityAspect)
+    #
+    # @return [::ContentManagerSystem::ContentTypeAspect]
+    #
+    def aspect(aspect)
+
+      (aspects.select { |ct_aspect| ct_aspect.aspect == aspect }).first
+    
+    end
 
     #
     # Exporting to json
