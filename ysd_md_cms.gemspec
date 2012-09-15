@@ -11,7 +11,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "dm-types", "1.1.0"    # View JSON field
   
   s.add_runtime_dependency "ysd-persistence"      # Persistence system
-  s.add_runtime_dependency "ysd_md_auditory"      # Audit information
+  s.add_runtime_dependency "ysd_md_comparison"    # Comparison
+  s.add_runtime_dependency "ysd_md_audit"         # Audit information
   s.add_runtime_dependency "ysd_md_profile"       # Profiles 
   s.add_runtime_dependency "ysd_core_plugins"     # Plugins
   

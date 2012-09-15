@@ -1,7 +1,7 @@
 require 'ysd-persistence' 
 require 'uuid'
 require 'base64'
-require 'ysd_md_auditory' if not defined?Auditory
+require 'ysd_md_audit' if not defined?Audit
 require 'ysd-md-profile' if not defined?Users
 module ContentManagerSystem
 

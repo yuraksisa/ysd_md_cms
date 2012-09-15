@@ -36,9 +36,7 @@ module ContentManagerSystem
       if (self.parent and not self.parent.saved?)
         self.parent = Term.get(self.parent.id)
       end
-      
-      puts "saving Term : #{self}"
-      
+     
       old_save
     
     end
