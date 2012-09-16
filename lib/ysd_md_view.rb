@@ -20,9 +20,10 @@ module ContentManagerSystem
     
     property :style, String, :field => 'style', :length => 10     # The style of the view
             
-    property :query_fields, Json, :field => 'query_fields', :required => false
-    property :query_conditions, Json, :field => 'query_conditions', :required => false
-    property :query_order, Json, :field => 'query_order', :required => false
+    property :query_fields, Json, :field => 'query_fields', :required => false, :default => []
+    property :query_conditions, Json, :field => 'query_conditions', :required => false, :default => {}
+    property :query_order, Json, :field => 'query_order', :required => false, :default => []
+    property :query_arguments, Json, :field => 'query_arguments', :required => false, :default => []
     
     property :render, String, :field => 'render', :length => 10              # The render which will be used
 
@@ -51,37 +52,15 @@ module ContentManagerSystem
       unless the_model
         puts "The model is not defined. Has you require it?"
       end
-      
-      # Build the query  
-      
-      #Apply args to the conditions
-      args_array = query_arguments(arguments)
-#      arguments ||= ''
-#      args_array = arguments.split("/")
-#      args_array.delete('')
-#      the_query_conditions = {}
-#      self.query_conditions.each do |key, value|
-#        if value.kind_of?(String)
-#          the_query_conditions[key] = value.to_s % args_array
-#        else
-#          the_query_conditions[key] = value
-#        end
-#      end
-#      puts "the_query_conditions : #{the_query_conditions.to_json}"
-      
-      #context conditions
-                    
-#      query = {:fields => self.query_fields, :conditions => the_query_conditions, :order => self.query_order}
-              
-#      puts "query : #{query.to_json}"       
+
+      puts "fields : #{view_fields.inspect}"
+      puts "order  : #{view_order.inspect}"
+      puts "arguments : #{view_arguments.inspect}"
+      puts "arguments received : #{arguments}"
 
       query = {}
       
-      #if vf=view_fields
-      #  query.store(:fields, vf)
-      #end
-      
-      if vc=view_conditions
+      if vc=view_conditions(arguments)
         if the_model.included_modules.include?(DataMapper::Resource)
           query.store(:conditions, vc.comparison.build_sql)
         else
@@ -98,10 +77,8 @@ module ContentManagerSystem
         end
        
       end
-                                     
+                                           
       puts "query  : #{query.inspect}"
-      puts "fields : #{view_fields}"
-      puts "order  : #{view_order}"
       
       # Executes the query
             
@@ -113,6 +90,7 @@ module ContentManagerSystem
     @the_view_fields = nil
     @the_view_conditions = nil
     @the_view_order = nil
+    @the_view_arguments = nil
         
     #
     # Get the view fields
@@ -141,11 +119,11 @@ module ContentManagerSystem
     # 
     # @return
     #
-    def view_conditions
+    def view_conditions(arguments_values='')
     
       unless @processed_conditions 
         if not query_conditions.nil?
-          @the_view_conditions = ViewQueryConditions.new(query_conditions)
+          @the_view_conditions = ViewQueryConditions.new(query_conditions, view_arguments, arguments_values)
         end
       end
       
@@ -171,17 +149,26 @@ module ContentManagerSystem
     
     end    
     
-    private
+    #
+    # Get the view arguments
+    #
+    def view_arguments
     
-    def query_arguments(arguments='')
+      if @the_view_arguments.nil?
+        @the_view_arguments = {}
+        if not query_arguments.nil?
+          query_arguments.each do |query_argument|
+            view_argument = ViewQueryArgument.new(query_argument)
+            @the_view_arguments.store(view_argument.order, view_argument) 
+          end
+        end
+      end
       
-      arguments ||= ''
-      args_array = arguments.split("/")
-      args_array.delete('')    
+      puts "view arguments : #{@the_view_arguments.inspect}"
+      
+      return @the_view_arguments    
     
-      return args_array
-    
-    end
+    end    
     
         
   end #View        
@@ -194,8 +181,6 @@ module ContentManagerSystem
       attr_reader :field, :link, :image, :link_class, :image_class
       
       def initialize(opts={})
-        
-        puts "opts : #{opts.inspect}"
         
         @field = opts['field']
 
@@ -228,9 +213,12 @@ module ContentManagerSystem
   #
   class ViewQueryConditions
     
-      attr_reader :comparison
+      attr_reader :comparison, :view_arguments, :arguments_values
     
-      def initialize(opts={})
+      def initialize(opts={}, v_arguments, arguments)
+        @view_arguments = v_arguments
+        @arguments_values = query_arguments_values(arguments)      
+        puts "arguments values : #{@arguments_values.inspect} #{arguments}"
         @comparison = process_comparison(opts)
       end
 
@@ -259,9 +247,39 @@ module ContentManagerSystem
       
       def process_simple_comparison(opts={})
       
-        Conditions::Comparison.new(opts['field'], opts['operator'], opts['value'])
+        value = opts['value']
+        
+        if value.kind_of?(String)
+          puts "value : #{value} arguments : #{arguments_values.inspect}"
+          value = value % arguments_values
+        end
+        
+        Conditions::Comparison.new(opts['field'], opts['operator'], value )
       
       end
+    
+      private
+    
+      #
+      # Extract the query argument values from the string
+      #
+      def query_arguments_values(arguments='')
+      
+        arguments ||= ''
+        a_arguments = arguments.split("/")
+        a_arguments.delete('')    
+      
+        h_arguments={}
+      
+        a_arguments.each_index do |index|
+          h_arguments.store(index.to_s.to_sym, a_arguments[index])
+        end
+    
+        puts " arguments : #{arguments}  array : #{a_arguments.inspect}  hash: #{h_arguments.inspect}"
+    
+        return h_arguments
+    
+     end    
     
   end
     
@@ -276,6 +294,24 @@ module ContentManagerSystem
       
         @field = opts['field']
         @order = opts['order']
+      
+      end
+    
+  end
+
+  #
+  # Represent a query argument
+  #
+  class ViewQueryArgument
+      
+      attr_reader :order, :default, :wildcard, :type
+         
+      def initialize(opts={})
+      
+        @order    = opts['order']
+        @default  = opts['default']
+        @wildcard = opts['wildcard']
+        @type     = opts['type']
       
       end
     
