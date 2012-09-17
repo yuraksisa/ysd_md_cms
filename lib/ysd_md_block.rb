@@ -48,7 +48,7 @@ module ContentManagerSystem
         
       end
       
-      puts "can show : #{can_show}"
+      #puts "can show : #{can_show}"
       
       can_show
       
@@ -99,7 +99,7 @@ module ContentManagerSystem
     #
     def self.rehash_blocks(blocks)
     
-      puts "blocks : #{blocks.to_json}"
+      #puts "blocks : #{blocks.to_json}"
     
       # Remove the not existing blocks
       Block.all.each do |block|

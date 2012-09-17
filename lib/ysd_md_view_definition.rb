@@ -1,5 +1,8 @@
 module Model
-
+  
+  #
+  # It represents the view styles and renders
+  #
   class ViewDefinition
     
     #

@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
   
   s.add_runtime_dependency "data_mapper", "1.1.0"
   s.add_runtime_dependency "dm-types", "1.1.0"    # View JSON field
+  s.add_runtime_dependency "uuid", "2.3.5"        # UUID generator
   
   s.add_runtime_dependency "ysd-persistence"      # Persistence system
   s.add_runtime_dependency "ysd_md_comparison"    # Comparison

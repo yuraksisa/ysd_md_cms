@@ -1,5 +1,5 @@
 require 'dm-types'
-require 'data_mapper' 
+require 'data_mapper' unless defined?DataMapper
 require 'ysd-persistence' if not defined?(Persistence)
 require 'ysd_md_comparison' unless defined?Conditions::AbstractComparison
 
@@ -53,11 +53,6 @@ module ContentManagerSystem
         puts "The model is not defined. Has you require it?"
       end
 
-      puts "fields : #{view_fields.inspect}"
-      puts "order  : #{view_order.inspect}"
-      puts "arguments : #{view_arguments.inspect}"
-      puts "arguments received : #{arguments}"
-
       query = {}
       
       if vc=view_conditions(arguments)
@@ -77,9 +72,7 @@ module ContentManagerSystem
         end
        
       end
-                                           
-      puts "query  : #{query.inspect}"
-      
+                                                 
       # Executes the query
             
       (the_model)?the_model.all(query):[]     
@@ -163,9 +156,7 @@ module ContentManagerSystem
           end
         end
       end
-      
-      puts "view arguments : #{@the_view_arguments.inspect}"
-      
+            
       return @the_view_arguments    
     
     end    
@@ -218,7 +209,6 @@ module ContentManagerSystem
       def initialize(opts={}, v_arguments, arguments)
         @view_arguments = v_arguments
         @arguments_values = query_arguments_values(arguments)      
-        puts "arguments values : #{@arguments_values.inspect} #{arguments}"
         @comparison = process_comparison(opts)
       end
 
@@ -250,7 +240,6 @@ module ContentManagerSystem
         value = opts['value']
         
         if value.kind_of?(String)
-          puts "value : #{value} arguments : #{arguments_values.inspect}"
           value = value % arguments_values
         end
         
@@ -274,9 +263,7 @@ module ContentManagerSystem
         a_arguments.each_index do |index|
           h_arguments.store(index.to_s.to_sym, a_arguments[index])
         end
-    
-        puts " arguments : #{arguments}  array : #{a_arguments.inspect}  hash: #{h_arguments.inspect}"
-    
+        
         return h_arguments
     
      end    

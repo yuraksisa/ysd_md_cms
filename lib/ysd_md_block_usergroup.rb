@@ -19,8 +19,6 @@ module ContentManagerSystem
     #
     def save
      
-      puts "saving block user group #{self.inspect}"
-     
       # It makes sure to get content type and taxonomy from the storage
       if (self.usergroup and not self.usergroup.saved?)
         attributes = self.usergroup.attributes.clone
@@ -33,8 +31,6 @@ module ContentManagerSystem
         attributes.delete(:id)
         self.block = Block.first_or_create({:id => self.block.id}, attributes)
       end
-      
-      puts "after saving block user group #{self.inspect}"
       
       # Invokes the old save 
       old_save 
