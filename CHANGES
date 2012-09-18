@@ -1,7 +1,13 @@
 YSD_MD_CMS
 ==================
 
-0.2.0 (2012.09.17)
+0.2.0 
 ------------------
+
+2012.09.18
+
+- Moved the content and term translation to this gem
+
+2012.09.17
 
 - Starting gem repository and git versioning

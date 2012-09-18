@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "ysd_md_comparison"    # Comparison
   s.add_runtime_dependency "ysd_md_audit"         # Audit information
   s.add_runtime_dependency "ysd_md_profile"       # Profiles 
+  s.add_runtime_dependency "ysd_md_translation"   # Translation
   s.add_runtime_dependency "ysd_core_plugins"     # Plugins
   
 end
