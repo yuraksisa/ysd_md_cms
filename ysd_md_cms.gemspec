@@ -9,14 +9,13 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/yuraksisa/ysd_md_cms"  
   
   s.add_runtime_dependency "data_mapper", "1.1.0"
-  s.add_runtime_dependency "dm-types", "1.1.0"    # View JSON field
   s.add_runtime_dependency "uuid", "2.3.5"        # UUID generator
   
   s.add_runtime_dependency "ysd-persistence"      # Persistence system
   s.add_runtime_dependency "ysd_md_comparison"    # Comparison
-  s.add_runtime_dependency "ysd_md_audit"         # Audit information
-  s.add_runtime_dependency "ysd_md_profile"       # Profiles 
-  s.add_runtime_dependency "ysd_md_translation"   # Translation
-  s.add_runtime_dependency "ysd_core_plugins"     # Plugins
+  s.add_runtime_dependency "ysd_md_audit"         # Audit (content)
+  s.add_runtime_dependency "ysd_md_rac"           # Resource Access Control (content)
+  s.add_runtime_dependency "ysd_md_translation"   # Translation (content, term)
+  s.add_runtime_dependency "ysd_core_plugins"     # Plugins (content type aspects)
   
 end

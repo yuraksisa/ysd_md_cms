@@ -1,6 +1,6 @@
 require 'data_mapper' if not defined?(DataMapper)
+require 'ysd-plugins' unless defined?Plugins::Plugin
 
-#
 module ContentManagerSystem
 
   #

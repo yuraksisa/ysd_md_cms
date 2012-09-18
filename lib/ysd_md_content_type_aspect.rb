@@ -1,5 +1,5 @@
 require 'data_mapper' if not defined?(DataMapper)
-require 'ysd-plugins_aspect_configuration' unless defined?Plugins::AspectConfiguration
+require 'ysd-plugins' unless defined?Plugins::AspectConfiguration
 
 module ContentManagerSystem
 

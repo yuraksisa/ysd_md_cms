@@ -1,8 +1,9 @@
 require 'ysd-persistence' 
 require 'uuid'
 require 'base64'
-require 'ysd_md_audit' if not defined?Audit
-require 'ysd-md-profile' if not defined?Users
+require 'ysd_md_audit' if not defined?Audit::AuditorPersistence
+require 'ysd_md_rac' if not defined?Users::ResourceAccessControlPersistence
+
 module ContentManagerSystem
 
   # -------------------------------------
@@ -10,8 +11,8 @@ module ContentManagerSystem
   # -------------------------------------
   class Content
     include Persistence::Resource
-    include Users::ResourceAccessControlPersistence # Extends the model to control its access
-    include Audit::AuditorPersistence               # Extends the model to add audit information
+    include Users::ResourceAccessControlPersistence # Extends the model to Resource Access Control
+    include Audit::AuditorPersistence               # Extends the model to Audit
     
     property :alias         # An URL alias to the content
     property :title         # The content title
