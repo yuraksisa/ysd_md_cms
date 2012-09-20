@@ -14,22 +14,22 @@ module ContentManagerSystem
     include Users::ResourceAccessControlPersistence # Extends the model to Resource Access Control
     include Audit::AuditorPersistence               # Extends the model to Audit
     
-    property :alias         # An URL alias to the content
-    property :title         # The content title
-    property :subtitle      # The content subtitle
-    property :description   # The content description
-    property :summary       # The content summary
-    property :keywords      # The key words (important words)
+    property :alias, String           # An URL alias to the content
+    property :title, String           # The content title
+    property :subtitle, String        # The content subtitle
+    property :description, String     # The content description
+    property :summary, String         # The content summary
+    property :keywords, String        # The key words (important words)
           
-    property :type          # The content type (it must exist the ContentManagerSystem::ContentType)
-    property :categories    # The content category (an array of ContentManagerSystem::Term)
-    property :categories_by_taxonomy # The categories organized by taxonomy
+    property :type, String                    # The content type (it must exist the ContentManagerSystem::ContentType)
+    property :categories, Object              # The content category (an array of ContentManagerSystem::Term)
+    property :categories_by_taxonomy, Object  # The categories organized by taxonomy
     
-    property :language      # The language in which the content has been written
+    property :language, String        # The language in which the content has been written
     
-    property :author        # The content author
+    property :author, String          # The content author
 
-    property :body          # The content
+    property :body, String            # The content
 
     # ========================= Finders ===========================
     

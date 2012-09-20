@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
   
   s.add_runtime_dependency "ysd-persistence"      # Persistence system
   s.add_runtime_dependency "ysd_md_comparison"    # Comparison
+  s.add_runtime_dependency "ysd_md_profile"       # Block permissions
   s.add_runtime_dependency "ysd_md_audit"         # Audit (content)
   s.add_runtime_dependency "ysd_md_rac"           # Resource Access Control (content)
   s.add_runtime_dependency "ysd_md_translation"   # Translation (content, term)
