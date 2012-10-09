@@ -23,7 +23,8 @@ module Model
     def self.view_renders(view_style)
     
        if (view_style == 'teaser')
-         [{:id => :teaser, :description => :teaser}]
+         [{:id => :teaser, :description => :teaser},
+          {:id => :slider, :description => :slider}]
        else
          [{:id => :list, :description => :list}, 
           {:id => :table, :description => :table},

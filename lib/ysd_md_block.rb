@@ -36,22 +36,7 @@ module ContentManagerSystem
     #
     def can_be_shown?(user, path)
     
-      can_show = false
-    
-      if show_block_on_anonymous_user
-        can_show = user.nil?
-      end
-        
-      if (not can_show) and (not user.nil?)
-                       
-        can_show = (BlockUserGroup.count('block.id'=>id, 'usergroup.group'=>user.usergroups) > 0)
-        
-      end
-      
-      #puts "can show : #{can_show}"
-      
-      can_show
-      
+      check_user?(user) and check_path?(path)    
     
     end
     
@@ -99,8 +84,6 @@ module ContentManagerSystem
     #
     def self.rehash_blocks(blocks)
     
-      #puts "blocks : #{blocks.to_json}"
-    
       # Remove the not existing blocks
       Block.all.each do |block|
         x = blocks.delete_if do |b| b[:name] == block.name and b[:module_name] == block.module_name and block[:theme] == block.theme end
@@ -112,6 +95,57 @@ module ContentManagerSystem
         Block.first_or_create(block)    
       end
     
+    end
+    
+    private
+     
+    #
+    # Check if the block is shown for the user
+    # 
+    def check_user?(user)
+   
+      can_show = false
+      
+      # check the user    
+      if show_block_on_anonymous_user
+        can_show = user.nil?
+      end
+        
+      if (not can_show) and (not user.nil?)
+        can_show = (BlockUserGroup.count('block.id'=>id, 'usergroup.group'=>user.usergroups) > 0)
+      end
+      
+      return can_show
+      
+    end
+    
+    #
+    # Check if the block can be shown in this path
+    #
+    def check_path?(path)
+    
+      process_pages = show_block_on_page_list.split
+      
+      can_show = true
+      
+      if process_pages.length > 0 and show_block_on_page == 2
+        can_show = false
+      end
+         
+      process_pages.each do |expression|
+        reg_exp = Regexp.new(expression)
+        if show_block_on_page == 1 and path.match(reg_exp) # all but listed
+          can_show = false
+          break            
+        end  
+        if show_block_on_page == 2 and path.match(reg_exp) # only listed
+          can_show = true
+          break
+        end
+      end
+      
+      return can_show
+      
     end
     
   end

@@ -34,6 +34,9 @@ module ContentManagerSystem
     
     property :data_repository, String, :field => 'data_repository', :length => 32, :default => 'default' 
     
+    property :title, String, :field => 'title', :length => 80 # The view title
+    property :url, String, :field => 'url', :length => 256    # The url from which it can be accessed
+    
     # Retrieves data from the data_repository
     #
     # @param [String] arguments
@@ -47,12 +50,16 @@ module ContentManagerSystem
     #
     def get_data(arguments="")
                         
-      the_model = (Persistence::Model.descendants.select do |model| model_name == model.model_name.downcase end).first      
+      the_model = (Persistence::Model.descendants.select { |model| model_name == model.model_name.downcase }).first  
+      
+      unless the_model
+        the_model = (DataMapper::Model.descendants.select { |model| model_name == model.name.scan(/\w+$/)[0].downcase }).first
+      end    
       
       unless the_model
         puts "The model is not defined. Has you require it?"
       end
-
+      
       query = {}
       
       if vc=view_conditions(arguments)
@@ -72,7 +79,7 @@ module ContentManagerSystem
         end
        
       end
-                                                 
+                                                       
       # Executes the query
             
       (the_model)?the_model.all(query):[]     
@@ -169,12 +176,13 @@ module ContentManagerSystem
   #
   class ViewQueryField
       
-      attr_reader :field, :link, :image, :link_class, :image_class
+      attr_reader :field, :class, :link, :image, :link_class, :image_class
       
       def initialize(opts={})
         
         @field = opts['field']
-
+        @class = opts['class']
+        
         @link  = opts['link']
         @link_class = opts['link_class']
                
@@ -238,10 +246,30 @@ module ContentManagerSystem
       def process_simple_comparison(opts={})
       
         value = opts['value']
-        
+               
+        puts "value :#{value} #{value.class.name} #{arguments_values}"       
+               
         if value.kind_of?(String)
           value = value % arguments_values
+          if e_m=value.match(/\{(\d+)\}/)
+            value=@view_arguments[e_m[1]].typecast(value)
+          end          
+        else
+          if value.kind_of?(Array)
+            value = value.map do |element|
+                     if element.kind_of?(String)
+                       value = element % arguments_values
+                       if e_m=element.match(/\{(\d+)\}/)
+                         value=@view_arguments[e_m[1]].typecast(value)
+                       end
+                     else
+                       element
+                     end
+                    end
+          end
         end
+        
+        puts "the value :#{value}"
         
         Conditions::Comparison.new(opts['field'], opts['operator'], value )
       
@@ -261,7 +289,7 @@ module ContentManagerSystem
         h_arguments={}
       
         a_arguments.each_index do |index|
-          h_arguments.store(index.to_s.to_sym, a_arguments[index])
+          h_arguments.store(index.to_s.to_sym, @view_arguments[index.to_s].typecast(a_arguments[index]))
         end
         
         return h_arguments
@@ -300,6 +328,17 @@ module ContentManagerSystem
         @wildcard = opts['wildcard']
         @type     = opts['type']
       
+      end
+    
+      def typecast(value)
+      
+        return_value = case type
+                         when 'integer'
+                            value.to_s.to_i
+                         else
+                            value
+                       end
+              
       end
     
   end

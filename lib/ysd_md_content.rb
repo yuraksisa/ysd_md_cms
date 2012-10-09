@@ -1,8 +1,9 @@
 require 'ysd-persistence' 
 require 'uuid'
 require 'base64'
-require 'ysd_md_audit' if not defined?Audit::AuditorPersistence
-require 'ysd_md_rac' if not defined?Users::ResourceAccessControlPersistence
+require 'unicode_utils' unless defined?UnicodeUtils
+require 'ysd_md_audit' unless defined?Audit::AuditorPersistence
+require 'ysd_md_rac' unless defined?Users::ResourceAccessControlPersistence
 
 module ContentManagerSystem
 
@@ -107,8 +108,12 @@ module ContentManagerSystem
           
       # creates the alias
            
-      content = Content.new(key, options)      
-      content.attribute_set(:alias, File.join(content.type, Time.now.strftime('%Y%m%d') , content.title.downcase.gsub(/\s/,'-')))
+      content = Content.new(key, options) 
+      
+      if content.alias.strip.length == 0     
+        alias_str = UnicodeUtils.nfkd(content.title).gsub(/[^\x00-\x7F]/,'').gsub(/\s/,'-')
+        content.attribute_set(:alias, File.join('/', content.type, Time.now.strftime('%Y%m%d') , alias_str))
+      end
       
       content.create
       
