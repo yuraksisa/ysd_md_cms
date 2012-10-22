@@ -5,7 +5,7 @@ require 'singleton'
 #
 class ResourceLoader
   include Singleton
-  include ContentManagerSystem::Support::ContentExtract
+  include ContentManagerSystem::Support::ContentExtractor
   
   #
   # Load resources from a directory
@@ -42,7 +42,7 @@ class ResourceLoader
           process_directory(root_path, file, model) unless filename.match(/^\./)
         else
           unless filename.match(/^\./)
-            metadata = parse_txt_file(file)
+            metadata = parse_content_file(file)
             model.create(file.gsub(root_path+'/','').gsub(/\.\w+$/,''), metadata)                   
           end
         end

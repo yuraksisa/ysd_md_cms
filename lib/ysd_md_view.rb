@@ -60,6 +60,8 @@ module ContentManagerSystem
         puts "The model is not defined. Has you require it?"
       end
       
+      puts "getting data for the view : #{view_name}"
+      
       query = {}
       
       if vc=view_conditions(arguments)
@@ -257,14 +259,16 @@ module ContentManagerSystem
         else
           if value.kind_of?(Array)
             value = value.map do |element|
-                     if element.kind_of?(String)
-                       value = element % arguments_values
-                       if e_m=element.match(/\{(\d+)\}/)
-                         value=@view_arguments[e_m[1]].typecast(value)
-                       end
-                     else
-                       element
-                     end
+                      item_value = element
+                      if element.kind_of?(String)
+                        item_value = element % arguments_values
+                        puts " -- item_value : #{item_value} element : #{element}"
+                        if e_m=element.match(/\{(\d+)\}/)
+                          item_value=@view_arguments[e_m[1]].typecast(item_value)
+                          puts " --- item_value : #{item_value}"
+                        end
+                      end
+                      item_value
                     end
           end
         end

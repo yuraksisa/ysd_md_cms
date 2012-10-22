@@ -2,7 +2,7 @@ require 'yaml' if not defined?(YAML)
 
 module ContentManagerSystem
   module Support
-    module ContentExtract
+    module ContentExtractor
 
       # Parse a file and gets the metadata hold
       # 
@@ -12,7 +12,7 @@ module ContentManagerSystem
       # @return [Hash]
       #   A hash with the metadata
       #  
-      def parse_txt_file(file_path)
+      def parse_content_file(file_path)
   
          result = {}
          metadata = []

@@ -123,25 +123,28 @@ module ContentManagerSystem
     # Check if the block can be shown in this path
     #
     def check_path?(path)
-    
-      process_pages = show_block_on_page_list.split
-      
+
       can_show = true
       
-      if process_pages.length > 0 and show_block_on_page == 2
-        can_show = false
-      end
-         
-      process_pages.each do |expression|
-        reg_exp = Regexp.new(expression)
-        if show_block_on_page == 1 and path.match(reg_exp) # all but listed
+      unless show_block_on_page_list.nil? and show_block_on_page_list.to_s.strip.length == 0
+        
+        process_pages = show_block_on_page_list.split
+        if process_pages.length > 0 and show_block_on_page == 2
           can_show = false
-          break            
-        end  
-        if show_block_on_page == 2 and path.match(reg_exp) # only listed
-          can_show = true
-          break
         end
+         
+        process_pages.each do |expression|
+          reg_exp = Regexp.new(expression)
+          if show_block_on_page == 1 and path.match(reg_exp) # all but listed
+            can_show = false
+            break            
+          end  
+          if show_block_on_page == 2 and path.match(reg_exp) # only listed
+            can_show = true
+            break
+          end
+        end
+     
       end
       
       return can_show

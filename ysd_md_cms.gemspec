@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.summary = "Yurak Sisa Content Manager System model"
   s.homepage = "http://github.com/yuraksisa/ysd_md_cms"  
   
-  s.add_runtime_dependency "data_mapper", "1.1.0"
+  s.add_runtime_dependency "data_mapper", "1.2.0"
   s.add_runtime_dependency "uuid", "2.3.5"        # UUID generator
   
   s.add_runtime_dependency "ysd-persistence"      # Persistence system

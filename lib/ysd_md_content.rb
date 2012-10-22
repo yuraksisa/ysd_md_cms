@@ -2,8 +2,10 @@ require 'ysd-persistence'
 require 'uuid'
 require 'base64'
 require 'unicode_utils' unless defined?UnicodeUtils
+require 'ysd_core_plugins' unless defined?Plugins::ApplicableModelAspect
 require 'ysd_md_audit' unless defined?Audit::AuditorPersistence
 require 'ysd_md_rac' unless defined?Users::ResourceAccessControlPersistence
+require 'support/ysd_md_cms_support' unless defined?ContentManagerSystem::Support
 
 module ContentManagerSystem
 
@@ -12,8 +14,11 @@ module ContentManagerSystem
   # -------------------------------------
   class Content
     include Persistence::Resource
-    include Users::ResourceAccessControlPersistence # Extends the model to Resource Access Control
-    include Audit::AuditorPersistence               # Extends the model to Audit
+    include Plugins::ApplicableModelAspect          # Extends the entity to allow apply aspects
+    include Users::ResourceAccessControl            # Extends the model to Resource Access Control
+    include Audit::Auditor                          # Extends the model to Audit
+    
+    extend ::ContentManagerSystem::Support::ContentExtractor # Content extractor
     
     property :alias, String           # An URL alias to the content
     property :title, String           # The content title
@@ -121,18 +126,20 @@ module ContentManagerSystem
     
     end
     
-    # ============== Instance methods =====================
+    #
+    # Create a content from a file
+    #
+    # @param [String] the file path
+    # @return [ContentManagerSystem::Content] the content
+    #
+    def self.new_from_file(file_path)
     
-    #
-    # Gets the alias path to include a link to the content
-    #
-    def alias_path
-      the_path = ''
-      if attribute_get(:clear_id)
-        the_path = model.build_path(attribute_get(:clear_id))
-      end
-      the_path
+      resource_name = File.basename(file_path, File.extname(file_path))
+      content = Content.new(resource_name, parse_content_file(file_path))
+    
     end
+    
+    # ============== Instance methods =====================
     
     #
     # Get the content categories 
@@ -170,6 +177,8 @@ module ContentManagerSystem
       @full_categories
      
     end
+        
+    # ============ Exporting the objects =================
     
     # Serializes the object to json
     #
