@@ -80,14 +80,15 @@ module ContentManagerSystem
     #
     # @param [Array] blocks
     #  Array of Hashes which the blocks definitions:
-    #    {:name => 'myblock', :module_name => 'module where the block is defined'}
+    #    {:name => 'myblock', :module_name => 'module where the block is defined' , :theme => 'theme'}
     #
     def self.rehash_blocks(blocks)
     
       # Remove the not existing blocks
       Block.all.each do |block|
-        x = blocks.delete_if do |b| b[:name] == block.name and b[:module_name] == block.module_name and block[:theme] == block.theme end
-        block.destroy if not x 
+        unless blocks.index {|b| b[:name] == block.name and b[:module_name] == block.module_name.to_sym and b[:theme]==block.theme}
+          block.destroy
+        end 
       end
       
       # Create the not existing blocks
