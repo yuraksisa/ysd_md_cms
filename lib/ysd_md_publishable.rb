@@ -1,0 +1,263 @@
+require 'ysd_md_published_state'
+require 'ysd-md-user-profile' unless defined?Users::Profile
+require 'ysd-md-business_events' unless defined?BusinessEvents::BusinessEvent
+
+module ContentManagerSystem
+  #
+  # Module which can be included in any resource to manage the publish state
+  #
+  module Publishable
+    include Model::System::Request
+
+    #
+    # When the model is included in a class
+    #
+    def self.included(model)
+      
+      if model.respond_to?(:property)
+
+        model.property :publishing_state, String, :length => 10          # The content state (it must be a ContentManagerSystem::PublishedState instance)
+        model.property :publishing_workflow, String, :lenght => 20       # The default workflow
+
+        model.property :publishing_date, DateTime                        # The publishing date
+        model.property :publishing_publisher, String, :length => 20      # The publisher (user)
+
+        model.property :publishing_confirmation_date, DateTime
+
+        model.property :publishing_validation_date, DateTime
+        model.property :publishing_validation_user, String, :length => 20 # The validation user
+
+        model.property :publishing_banned_date, DateTime
+        model.property :publishing_banned_user, String, :length => 20    # The banned user
+
+        model.property :publishing_allowed_date, DateTime
+        model.property :publishing_allowed_user, String, :length => 20   # The allowed user
+        
+        model.property :composer_user, String, :length => 20             # The composer user
+
+        model.property :composer_name, String, :length => 80             # The name of the composer (if he/she's an anonymous user)
+        model.property :composer_email, String, :length => 50            # The email of the composer (if he/she's an anonymous user)
+        model.property :composer_website, String, :length => 50          # The website of the composer (it he/she's an anonymous user)
+
+        model.property :composer_external_id, String, :length => 50       # The composer external id (if he/she is logged in by an external account)
+        model.property :composer_external_supplier, String, :length => 50 # The composer external supplier (Facebook, Twitter, ...)
+
+      end
+      
+      if model.respond_to?(:before)
+
+        before :create do
+                    
+          init_data
+
+        end
+
+      end
+
+    end
+    
+    #
+    # Get the available publishing actions depending of the state of the publicable
+    #
+    # @return [Array] array of ContentManagerSystem::PublishingAction
+    #
+    def publishing_actions
+
+      actions = []
+
+      if wf = get_publishing_workflow
+        actions= wf.available_steps(self).map { |step| step.action }
+      end
+
+      return actions.uniq
+
+    end
+
+    #
+    # Save the publication (create a draft)
+    #
+    def save_publication
+      
+      init_data
+
+      if get_publishing_workflow.is_accepted?(self, PublishingAction::SAVE)
+        self.publishing_state = PublishingState::DRAFT.id
+        save if self.respond_to?(:save)
+      end
+
+    end
+    
+    #
+    # Check if the publication is published 
+    #
+    def is_published?
+      self.get_publishing_state == PublishingState::PUBLISHED
+    end
+
+    #
+    # Check if the publication is banned
+    #
+    def is_banned?
+      self.get_publishing_state == PublishingState::BANNED
+    end
+
+    #
+    # Check if the publication is pending validation
+    #
+    def is_pending_validation?
+      self.get_publishing_state == PublishingState::PENDING_VALIDATION
+    end
+
+    #
+    # Check if the publication is pending confirmation
+    #
+    def is_pending_confirmation?
+
+      self.get_publishing_state == PublishingState::PENDING_CONFIRMATION
+
+    end
+
+    #
+    # Publish
+    #
+    def publish_publication
+
+      init_data
+
+      if new_state = get_publishing_workflow.next_state(self, PublishingAction::PUBLISH)
+        self.publishing_state = new_state.id 
+        if new_state == PublishingState::PUBLISHED
+          self.publishing_date = Time.now
+          self.publishing_publisher = connected_user.username
+        end
+        save if self.respond_to?(:save)
+        BusinessEvents::BusinessEvent.fire_event(:publication_published, publication_info)
+      end
+
+    end    
+    
+    #
+    # Confirm
+    #
+    def confirm_publication
+
+      if new_state = get_publishing_workflow.next_state(self, PublishingAction::CONFIRM)
+        self.publishing_state = new_state.id
+        if new_state != PublishingState::PENDING_CONFIRMATION
+          self.publishing_confirmation_date = Time.now
+        end
+        save if self.respond_to?(:save)
+        BusinessEvents::BusinessEvent.fire_event(:publication_confirmed, publication_info)
+      end 
+
+    end
+
+    #
+    # Validate
+    #
+    def validate_publication
+
+      if new_state = get_publishing_workflow.next_state(self, PublishingAction::VALIDATE)
+        self.publishing_state = new_state.id
+        if new_state != PublishingState::PENDING_VALIDATION
+          self.publishing_validation_date = Time.now
+          self.publishing_validation_user = connected_user.username
+        end
+        save if self.respond_to?(:save)
+        BusinessEvents::BusinessEvent.fire_event(:publication_validated, publication_info)
+      end
+
+    end
+    
+    #
+    # Ban 
+    #
+    def ban_publication
+
+      if new_state=get_publishing_workflow.next_state(self, PublishingAction::BAN)
+        self.publishing_state = new_state.id
+        if new_state == PublishingState::BANNED
+          self.publishing_banned_date = Time.now
+          self.publishing_banned_user = connected_user.username
+        end
+        save if self.respond_to?(:save)
+        BusinessEvents::BusinessEvent.fire_event(:publication_banned, publication_info)
+
+      end
+
+    end
+
+    #
+    # Allow
+    #
+    def allow_publication
+
+      if new_state=get_publishing_workflow.next_state(self, PublishingAction::ALLOW)
+
+        self.publishing_state = new_state.id
+        if new_state != PublishingState::BANNED
+          self.publishing_allowed_date = Time.now
+          self.publishing_allowed_user = connected_user.username
+        end
+
+        save if self.respond_to?(:save)
+        BusinessEvents::BusinessEvent.fire_event(:publication_allowed, publication_info)
+
+      end
+
+
+    end
+
+    #
+    # Get the publishing state
+    #
+    # @return [ContentManagerSystem::PublishedState]
+    #
+    def get_publishing_state
+
+      @the_state ||= PublishingState.get(publishing_state)
+
+    end
+
+    #
+    # Get the publishing workflow
+    #
+    def get_publishing_workflow
+
+      @the_workflow ||= PublishingWorkFlow.get(publishing_workflow)
+
+    end
+
+    #
+    # Get the composer user
+    #
+    def get_composer_user
+
+      @the_composer_user ||= (Users::Profile.get(composer_user) || Users::Profile::ANONYMOUS_USER)
+
+    end
+
+    private
+
+    def init_data
+
+          # Sets the composer user
+          if self.composer_user.nil? or self.composer_user == ''
+            self.composer_user = connected_user.username 
+          end
+          
+          # Sets the workflow
+          if self.publishing_workflow.nil? or self.publishing_workflow == ''
+            default_workflow = SystemConfiguration::Variable.get_value('cms.default_publishing_workflow', 'standard')
+            self.publishing_workflow = default_workflow
+          end
+
+          # Sets the state
+          if self.publishing_state.nil? or self.publishing_state == ''
+            self.publishing_state = self.get_publishing_workflow.initial_state.id || PublishingState::INITIAL.id
+          end
+
+    end
+
+  end
+end

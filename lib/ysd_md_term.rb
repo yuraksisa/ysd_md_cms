@@ -1,5 +1,6 @@
-require 'data_mapper' if not defined?(DataMapper)
-require 'ysd_md_fieldset' unless defined?FieldSet::ApplicableModelAspect
+require 'data_mapper' unless defined?(DataMapper)
+require 'aspects/ysd-plugins_applicable_model_aspect' unless defined?Plugins::ApplicableModelAspect
+require 'ysd_md_term_translation'
 
 #
 module ContentManagerSystem
@@ -9,7 +10,9 @@ module ContentManagerSystem
   #
   class Term
     include DataMapper::Resource
-    include Plugins::ApplicableModelAspect         # Extends the entity to allow apply aspects
+    include ContentManagerSystem::TermTranslation # Extends the term to manage translation
+
+    extend Plugins::ApplicableModelAspect         # Extends the term to allow apply aspects
 
     storage_names[:default] = 'cms_terms'
 

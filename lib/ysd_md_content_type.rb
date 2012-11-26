@@ -1,5 +1,6 @@
 require 'data_mapper' if not defined?(DataMapper)
 require 'ysd-plugins' unless defined?Plugins::Plugin
+require 'ysd_md_publishing_workflow'
 
 module ContentManagerSystem
 
@@ -14,8 +15,12 @@ module ContentManagerSystem
     property :id, String, :field => 'id', :length => 20, :key => true    
     property :name, String, :field => 'name', :length => 50
     property :description, String, :field => 'description', :length => 256
+    property :publishing_workflow, String, :field => 'publishing_workflow', :length => 20   # The publication workflow
 
-    has n, :aspects, 'ContentTypeAspect', :child_key => [:content_type_id], :parent_key => [:id], :constraint => :destroy
+    property :message_on_new_content, Text, :field => 'message_on_new_content'
+    property :message_on_edit_content, Text, :field => 'message_on_edit_content'
+
+    has n, :aspects, 'ContentTypeAspect', :child_key => [:content_type_id], :parent_key => [:id], :constraint => :destroy, :order => [:weight.asc]
     has n, :usergroups, 'ContentTypeUserGroup', :child_key => [:content_type_id], :parent_key => [:id], :constraint => :destroy
     
     alias old_save save
@@ -30,6 +35,15 @@ module ContentManagerSystem
 
       update_aspects
       update_usergroups
+
+    end
+
+    #
+    # Check if the content type can be created by an user
+    #
+    def can_be_created_by?(user)
+      
+      user.usergroups.any? {usergroups.map {|ctug| ctug.usergroup.group}}
 
     end
     
@@ -71,38 +85,33 @@ module ContentManagerSystem
       super(options.merge({:relationships => relationships}))
     
     end
-        
-    #
-    # Get the aspects applied to the content type
-    #
-    # @return [:Plugins::Aspect]
-    #    
-    def get_aspects(context)
-      
-      aspects_ids = aspects.map do |ct_aspect|
-                      ct_aspect.aspect.to_sym
-                    end
-           
-      ct_aspects = Plugins::Plugin.plugin_invoke_all('aspects', context).select do |aspect|
-        aspects_ids.include?(aspect.id)
-      end
-      
-      return ct_aspects
-      
-    end
     
+    # ------------- Aspects management --------------
+
+    #
+    # Return the model applicable aspects
+    #
+    # @return [Array] of Plugin::Aspect
+    #
+    def applicable_aspects
+      
+      Plugins::Aspect.all.select do |aspect| 
+        Plugins::ModelAspect.aspects_applicable(ContentManagerSystem::Content).include?(aspect.model_aspect)
+      end
+
+    end
+
     #
     # Get a concrete aspects associated to the resource (::Model::EntityAspect)
     #
-    # @return [::ContentManagerSystem::ContentTypeAspect]
+    # @return [Plugins::AspectConfiguration]
     #
     def aspect(aspect)
 
       (aspects.select { |ct_aspect| ct_aspect.aspect == aspect }).first
-    
+
     end
 
-    
     #
     # Assign aspects to the content type
     #
@@ -129,6 +138,8 @@ module ContentManagerSystem
     
     end
     
+    # --------------- Usergroups management --------------------
+
     #
     # Assign usergroups to the content type
     #
@@ -155,6 +166,17 @@ module ContentManagerSystem
     
     end    
     
+    # ------------- Work flow ---------------------------------
+
+    #
+    # Get the publishing workflow
+    #
+    def get_publishing_workflow
+
+      @the_workflow ||= PublishingWorkflow.get(publishing_workflow)
+
+    end
+
     private
      
     #

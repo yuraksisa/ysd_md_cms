@@ -1,92 +1,11 @@
-require 'data_mapper' unless defined?DataMapper
-require 'ysd_md_translation' unless defined?Model::Translation::Translation
-
-module Model
-  module Translation
-    module CMS
-        
-      #
-      # Content Translation
-      #  
-      # It represents the translation of a content
-      #
-      class ContentTranslation
-        include ::DataMapper::Resource
-      
-        storage_names[:default] = 'trans_content_translation'
-        
-        property :content_id, String, :length => 32, :field => 'content_id', :key => true
-        belongs_to :translation, 'Model::Translation::Translation', :child_key => [:translation_id], :parent_key => [:id]
-        
-        #
-        # Creates or updates the content translation
-        #
-        def self.create_or_update(content_id, language_code, attributes)
-        
-          content_translation = nil
-          
-          ContentTranslation.transaction do 
-         
-            content_translation = ContentTranslation.get(content_id)                  
-          
-            if content_translation
-              content_translation.set_translated_attributes(language_code, attributes)
-            else
-              translation = Model::Translation::Translation.create_with_terms(language_code, attributes) 
-              content_translation = ContentTranslation.create({:content_id => content_id, :translation => translation})
-            end
-            
-          end
-          
-          content_translation
-        
-        end
-        
-        #
-        # Find the content translated attributes 
-        #
-        # @param [String] language_code
-        #  The language
-        #
-        # @return [Array]
-        #  An array of TranslationTerm which contains the translated terms associated to the content
-        #
-        #
-        def get_translated_attributes(language_code)
-        
-          Model::Translation::TranslationTerm.find_translations_by_language(translation.id, language_code)
-        
-        end
-        
-        #
-        # Updates the translated attributes
-        #
-        # @param [String] language_code
-        #  The language
-        #
-        # @param [Hash] attributes
-        #  The attributes with the translations
-        #
-        #
-        def set_translated_attributes(language_code, attributes)
-        
-          translation.update_terms(language_code, attributes)
-        
-        end
-        
-      end #ContentTranslation
-
-    end #CMS
-  end #Translation
-end #Model
-
+require "ysd_md_translation_content"
 
 module ContentManagerSystem
   
   #
   # Reopen the class to extend with the content translation
   #
-  class Content
+  module ContentTranslation
   
     attr_accessor :language_code
   
@@ -103,7 +22,7 @@ module ContentManagerSystem
       
       content = nil
     
-      if content_translation = ::Model::Translation::CMS::ContentTranslation.get(key)
+      if content_translation = ::Model::Translation::ContentTranslation.get(key)
         translated_attributes = {}
         content_translation.get_translated_attributes(language_code).each {|term| translated_attributes.store(term.concept.to_sym, term.translated_text)}
         content = Content.new(key, attributes.merge(translated_attributes){ |key, old_value, new_value| new_value.to_s.strip.length > 0?new_value:old_value }) 
@@ -116,6 +35,11 @@ module ContentManagerSystem
       content
     
     end
+  
+  end #Content
+
+  class Content
+    include ContentManagerSystem::ContentTranslation # Extends the model to manage translation
   
     alias old_get_categories get_categories 
   
@@ -135,6 +59,7 @@ module ContentManagerSystem
       @full_translated_categories
     
     end
-  
-  end #Content
+
+  end
+
 end #ContentManagerSystem

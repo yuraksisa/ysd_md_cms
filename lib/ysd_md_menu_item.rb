@@ -1,11 +1,14 @@
 require 'data_mapper' unless defined?(DataMapper)
+require 'ysd_md_menu_item_translation'
+
 module Site
   #
   # It represents a menu item
   #
   class MenuItem
     include DataMapper::Resource
-    
+    include Site::MenuItemTranslation # Extends the menu item to manage translations
+
     storage_names[:default] = "site_menu_items"
     
     property :id, Serial, :field => 'id', :key => true                       # The menu item id

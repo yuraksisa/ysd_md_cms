@@ -14,9 +14,7 @@ module ContentManagerSystem
     
     belongs_to :content_type, 'ContentManagerSystem::ContentType', :child_key => [:content_type_id], :parent_key => [:id], :key => true
     property :aspect, String, :length => 32, :field => 'aspect', :key => true
-    property :weight, Integer, :field => 'weight', :default => 0       # The weight allows to configure the order of the aspects
-    property :in_group, Boolean, :field => 'in_group', :default => true   # 
-    
+
     alias old_save save
     
     #
@@ -50,6 +48,20 @@ module ContentManagerSystem
     
       return :cms
     
+    end    
+
+    #
+    # Generates the json
+    #
+    def as_json(options={})
+
+      methods = options[:methods] || []
+      methods << :aspect_attributes
+
+      options[:methods] = methods
+      
+      super(options)
+
     end    
 
      

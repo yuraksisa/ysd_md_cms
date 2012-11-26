@@ -16,26 +16,34 @@ module ContentManagerSystem
     
     property :view_name, String, :field => 'view_name', :length => 32, :key => true
     property :description, String, :field => 'description', :length => 256
-    property :model_name, String, :field => 'model_name', :length => 256
     
-    property :style, String, :field => 'style', :length => 10     # The style of the view
-            
-    property :query_fields, Json, :field => 'query_fields', :required => false, :default => []
+    # The view query
+    property :model_name, String, :field => 'model_name', :length => 256 # The model which will be used to retrieve the data            
     property :query_conditions, Json, :field => 'query_conditions', :required => false, :default => {}
     property :query_order, Json, :field => 'query_order', :required => false, :default => []
     property :query_arguments, Json, :field => 'query_arguments', :required => false, :default => []
     
-    property :render, String, :field => 'render', :length => 10              # The render which will be used
-
+    # The view style
+    property :style, String, :field => 'style', :length => 10                      # The style of the view (teaser, fields, ...)
+    property :v_fields, Json, :field => 'v_fields', :required => false, :default => [] # The fields   
+    property :render, String, :field => 'render', :length => 10                    # The render which will be used
+    
+    # The view result/pagination
     property :view_limit, Integer, :field => 'view_limit', :default => 0     # To limit the number of elements to retrieve
-    
     property :pagination, Boolean, :field => 'pagination', :default => false # It allow to paginate the results
+    property :ajax_pagination, Boolean, :field => 'ajax_pagination', :default => false # The pagination is done by ajax request
     property :page_size, Integer, :field => 'page_size', :default => 0       # The page size
-    
-    property :data_repository, String, :field => 'data_repository', :length => 32, :default => 'default' 
-    
+    property :pager, String, :field => 'pager', :length => 20, :default => 'default'
+
+    # The view page
     property :title, String, :field => 'title', :length => 80 # The view title
+    property :header, Text, :field => 'header' # Header text
+    property :footer, Text, :field => 'footer' # Footer text
+    property :script, Text, :field => 'script' # Script 
     property :url, String, :field => 'url', :length => 256    # The url from which it can be accessed
+    
+    # Other view options
+    property :block, Boolean, :field => 'block', :default => false
     
     # Retrieves data from the data_repository
     #
@@ -48,8 +56,8 @@ module ContentManagerSystem
     # @return [Array]
     #   The data that matches the query
     #
-    def get_data(arguments="")
-                        
+    def get_data(page=1, arguments="")
+
       the_model = (Persistence::Model.descendants.select { |model| model_name == model.model_name.downcase }).first  
       
       unless the_model
@@ -59,11 +67,10 @@ module ContentManagerSystem
       unless the_model
         puts "The model is not defined. Has you require it?"
       end
-      
-      puts "getting data for the view : #{view_name}"
-      
+
       query = {}
       
+      # conditions
       if vc=view_conditions(arguments)
         if the_model.included_modules.include?(DataMapper::Resource)
           query.store(:conditions, vc.comparison.build_sql)
@@ -72,19 +79,60 @@ module ContentManagerSystem
         end
       end
       
-      if vo=view_order
-      
-        if the_model.included_modules.include?(DataMapper::Resource)
-          query.store(:order, vo.map { |vo_item| DataMapper::Query::Operator.new(vo_item.field.to_sym, vo_item.order.to_sym) })
-        else
-          query.store(:order, vo.map { |vo_item| [vo_item.field, vo_item.order] })
-        end
-       
+      # pagination
+  
+      q_total_records = 0      # The view total records
+      q_total_pages = 1        # The view total pages
+      q_data = []              # The view data (query result)
+      q_page = page            # The view page that is being retrieved
+      q_page_size = page_size  # The view page size
+
+      if the_model
+        q_total_records = the_model.count(query)
       end
+
+      if q_page_size == 0
+        q_page_size = q_total_records 
+      end
+
+      if q_total_records > 0
+
+        # order
+        if vo=view_order
+          if the_model.included_modules.include?(DataMapper::Resource)
+            query.store(:order, vo.map { |vo_item| DataMapper::Query::Operator.new(vo_item.field.to_sym, vo_item.order.to_sym) })
+          else
+            query.store(:order, vo.map { |vo_item| [vo_item.field, vo_item.order] })
+          end
+        end
+
+        if (q_page < 1) or (q_page > (q_total_records/q_page_size))
+          q_page = 1
+        end
+
+        query_limit = {}
+        if pagination
+          query_limit.store(:limit,  q_page_size)
+          query_limit.store(:offset, q_page_size * (q_page - 1))
+        else
+          if view_limit > 0
+            query_limit.store(:limit, view_limit)
+          end
+        end
                                                        
-      # Executes the query
-            
-      (the_model)?the_model.all(query):[]     
+        # Executes the query
+      
+        if the_model        
+          if pagination and q_page_size >= 1
+            q_total_pages = (q_total_records/q_page_size).ceil       
+          end
+          
+          q_data = the_model.all(query.merge(query_limit))
+        end
+      
+      end
+
+      return {:summary => {:total_records => q_total_records, :total_pages => q_total_pages, :current_page => q_page }, :data => q_data}     
      
     end
 
@@ -99,15 +147,15 @@ module ContentManagerSystem
     #
     # @return [Array] 
     #
-    #   Array of ViewQueryField
+    #   Array of ViewField
     #
     def view_fields
       
       if @the_view_fields.nil?
         @the_view_fields = []
-        if not query_fields.nil? 
-          query_fields.each do |query_field|
-            @the_view_fields << ViewQueryField.new(query_field)
+        unless v_fields.nil? 
+          v_fields.each do |one_field|
+            @the_view_fields << ViewField.new(one_field)
           end
         end
       end
@@ -176,7 +224,7 @@ module ContentManagerSystem
   #
   # Represents a view field
   #
-  class ViewQueryField
+  class ViewField
       
       attr_reader :field, :class, :link, :image, :link_class, :image_class
       
@@ -293,7 +341,7 @@ module ContentManagerSystem
         h_arguments={}
       
         a_arguments.each_index do |index|
-          h_arguments.store(index.to_s.to_sym, @view_arguments[index.to_s].typecast(a_arguments[index]))
+          h_arguments.store(index.to_s.to_sym, @view_arguments[index.to_s].typecast(a_arguments[index])) if @view_arguments.has_key?(index.to_s)
         end
         
         return h_arguments

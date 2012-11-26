@@ -2,10 +2,12 @@ require 'ysd-persistence'
 require 'uuid'
 require 'base64'
 require 'unicode_utils' unless defined?UnicodeUtils
-require 'ysd_core_plugins' unless defined?Plugins::ApplicableModelAspect
+require 'ysd-plugins' unless defined?Plugins::ApplicableModelAspect
 require 'ysd_md_audit' unless defined?Audit::AuditorPersistence
 require 'ysd_md_rac' unless defined?Users::ResourceAccessControlPersistence
 require 'support/ysd_md_cms_support' unless defined?ContentManagerSystem::Support
+require 'aspects/ysd-plugins_applicable_model_aspect' unless defined?Plugins::ApplicableModelAspect
+require 'ysd_md_state'
 
 module ContentManagerSystem
 
@@ -14,26 +16,26 @@ module ContentManagerSystem
   # -------------------------------------
   class Content
     include Persistence::Resource
-    include Plugins::ApplicableModelAspect          # Extends the entity to allow apply aspects
-    include Users::ResourceAccessControl            # Extends the model to Resource Access Control
-    include Audit::Auditor                          # Extends the model to Audit
-    
+    extend  Plugins::ApplicableModelAspect           # Extends the entity to allow apply aspects
+    include Users::ResourceAccessControl             # Extends the model to Resource Access Control
+    include Audit::Auditor                           # Extends the model to Audit
+    include ContentManagerSystem::Publishable        # Extends the model to manage publication
+       
     extend ::ContentManagerSystem::Support::ContentExtractor # Content extractor
     
     property :alias, String           # An URL alias to the content
+   
     property :title, String           # The content title
     property :subtitle, String        # The content subtitle
     property :description, String     # The content description
     property :summary, String         # The content summary
     property :keywords, String        # The key words (important words)
-          
+    property :language, String        # The language in which the content has been written
+    property :author, String          # The content author
+
     property :type, String                    # The content type (it must exist the ContentManagerSystem::ContentType)
     property :categories, Object              # The content category (an array of ContentManagerSystem::Term)
     property :categories_by_taxonomy, Object  # The categories organized by taxonomy
-    
-    property :language, String        # The language in which the content has been written
-    
-    property :author, String          # The content author
 
     property :body, String            # The content
 
@@ -52,16 +54,25 @@ module ContentManagerSystem
     #
     def self.find_all(options={})
     
-      limit = options[:limit] || 10
-      offset = options[:offset] || 0
-      count = options[:count] || true
-    
-      result = []
+      query_options = {}
       
-      result << Content.all({:limit => limit, :offset => offset, :order => [['creation_date','desc']]})
+      query_options.store(:limit, options[:limit] || 10)
+      query_options.store(:offset, options[:offset] || 0)
+      query_options.store(:order, options[:order] || [['creation_date','desc']])
+      query_options.store(:conditions, options[:conditions]) if options.has_key?(:conditions)
+      
+      count = options[:count] || true
+
+      result = []
+    
+      result << Content.all(query_options)
       
       if count
-        result << Content.count
+        count_conditions = {}
+        if query_options.has_key?(:conditions)
+          count_conditions.store(:conditions, query_options[:conditions])
+        end
+        result << Content.count(count_conditions)
       end
       
       if result.length == 1
@@ -73,14 +84,12 @@ module ContentManagerSystem
     end
     
     #
-    # Retrieve the contents which belong to a category
+    # Retrieve the tagged contents
     # 
     # @param [String] term_id
     #  The term id
     #
     def self.find_by_term(term_id)
-        
-      #result = Content.all({:conditions => {:categories => [term_id.to_i]}, :order => [['creation_date','desc']]})
       
       Content.all({:conditions => Conditions::Comparison.new(:categories, '$in', [term_id.to_i]), :order => [['creation_date','desc']]})
     
@@ -103,13 +112,10 @@ module ContentManagerSystem
         options = args.first
       else
         if (args.size == 2)
-          key = args.first
-          options = args.last
+           key = args.first
+           options = args.last
         end
-     end
-      
-      # creates the ID
-      key ||= UUID.generator.generate(:compact)
+      end
           
       # creates the alias
            
@@ -122,7 +128,7 @@ module ContentManagerSystem
       
       content.create
       
-      content
+      return content
     
     end
     
@@ -140,6 +146,39 @@ module ContentManagerSystem
     end
     
     # ============== Instance methods =====================
+
+    def initialize(key, data={})
+
+     key ||= UUID.generator.generate(:compact)
+     super(key, data)
+
+    end
+
+    #
+    # Overwritten to initialize the publishing workflow when the type is assigned
+    #
+    def attribute_set(name, value) 
+      super(name, value)
+      if (name.to_sym == :type)
+        if c_type = ContentType.get(value)
+          attribute_set(:publishing_workflow, c_type.publishing_workflow)
+        end
+      end
+    end
+   
+    #
+    # Overwritten to initialize the publishing workflow when the type is assigned
+    #
+    def attributes=(attributes)
+      if attributes.has_key?(:type) and (not attributes.has_key?(:publishing_workflow)) and c_type=ContentType.get(attributes[:type])
+        attributes.merge!({:publishing_workflow => c_type.publishing_workflow})
+      end
+      if (not attributes.has_key?(:publishing_state)) and ((publishing_state.nil?) or (publishing_state == ''))
+        attributes.merge!({:publishing_state => nil})
+      end
+      super(attributes)
+    end
+
     
     #
     # Get the content categories 
@@ -177,6 +216,19 @@ module ContentManagerSystem
       @full_categories
      
     end
+    
+    #
+    # Get the content type
+    #
+    def get_content_type
+      
+      if type.nil?
+        return nil
+      end
+
+      @content_type ||= ContentType.get(type)
+
+    end
         
     # ============ Exporting the objects =================
     
@@ -205,8 +257,18 @@ module ContentManagerSystem
     
     end
     
+    # ============ Publication interface ===================
     
-  end #end class Content 
+    #
+    # Publication info for the publishing module
+    #
+    def publication_info
 
+      {:type => :content, :id => key}
+
+    end
+  
+  end #end class Content 
+  
 end #end module ContentManagerSystem
 
