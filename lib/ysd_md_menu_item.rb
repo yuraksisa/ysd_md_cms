@@ -7,7 +7,7 @@ module Site
   #
   class MenuItem
     include DataMapper::Resource
-    include Site::MenuItemTranslation # Extends the menu item to manage translations
+    include ContentManagerSystem::MenuItemTranslation # Extends the menu item to manage translations
 
     storage_names[:default] = "site_menu_items"
     

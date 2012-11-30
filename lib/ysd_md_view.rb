@@ -5,6 +5,10 @@ require 'ysd_md_comparison' unless defined?Conditions::AbstractComparison
 
 module ContentManagerSystem
 
+  # Defines an exception to check when the password is not valid
+  #
+  class ViewArgumentNotSupplied < RuntimeError; end
+
   #
   # It represents a view of data
   # 
@@ -27,6 +31,7 @@ module ContentManagerSystem
     property :style, String, :field => 'style', :length => 10                      # The style of the view (teaser, fields, ...)
     property :v_fields, Json, :field => 'v_fields', :required => false, :default => [] # The fields   
     property :render, String, :field => 'render', :length => 10                    # The render which will be used
+    property :render_options, Json, :field => 'render_options', :required => false, :default => {} # The render options
     
     # The view result/pagination
     property :view_limit, Integer, :field => 'view_limit', :default => 0     # To limit the number of elements to retrieve
@@ -71,8 +76,9 @@ module ContentManagerSystem
       query = {}
       
       # conditions
-      if vc=view_conditions(arguments)
+      if vc=view_conditions(arguments) and not vc.comparison.nil?
         if the_model.included_modules.include?(DataMapper::Resource)
+          puts "comparisons : #{vc.comparison.build_sql}"
           query.store(:conditions, vc.comparison.build_sql)
         else
           query.store(:conditions, vc.comparison)
@@ -265,13 +271,17 @@ module ContentManagerSystem
       attr_reader :comparison, :view_arguments, :arguments_values
     
       def initialize(opts={}, v_arguments, arguments)
-        @view_arguments = v_arguments
-        @arguments_values = query_arguments_values(arguments)      
+        @view_arguments = v_arguments                    # the arguments definitions
+        @arguments_values = extract_arguments(arguments) # the arguments values      
         @comparison = process_comparison(opts)
+        puts "view comparisons: #{@comparison.inspect}"
       end
 
       private 
       
+      #
+      # Build the query conditions
+      #
       def process_comparison(opts={})
       
         if opts.has_key?('conditions') # join comparison
@@ -282,6 +292,9 @@ module ContentManagerSystem
       
       end
       
+      #
+      # Join comparison
+      #
       def process_join_comparison(opts={})
       
         operator   = opts['operator']
@@ -289,50 +302,150 @@ module ContentManagerSystem
                        process_comparison(condition)
                      end
         
-        Conditions::JoinComparison.new(operator, conditions)
-      
+        conditions.delete_if { |condition| condition.nil? } # remove nil conditions (not arguments supplied)
+        
+        conditions = if conditions.length > 1
+                       Conditions::JoinComparison.new(operator, conditions)
+                     else 
+                       if conditions.length == 1
+                         conditions.first
+                       else 
+                         nil
+                       end
+                     end
+        
+        return conditions
+
       end
       
+      #
+      # Simple comparison
+      #
+      # @throw ViewArgumentNotSupplied
+      #
       def process_simple_comparison(opts={})
-      
+        
+        comparison = nil
         value = opts['value']
-               
-        puts "value :#{value} #{value.class.name} #{arguments_values}"       
-               
+        
         if value.kind_of?(String)
-          value = value % arguments_values
-          if e_m=value.match(/\{(\d+)\}/)
-            value=@view_arguments[e_m[1]].typecast(value)
-          end          
+          argument_in_value, value = process_value(value)       
+          if argument_in_value # the condition value includes an argument
+            if value.nil?
+              check_none_supplied_argument(argument_in_value)
+            else
+              comparison = Conditions::Comparison.new(opts['field'], opts['operator'], value) if check_supplied_argument(argument_in_value, value)
+            end
+          else
+            comparison = Conditions::Comparison.new(opts['field'], opts['operator'], value)
+          end  
         else
           if value.kind_of?(Array)
-            value = value.map do |element|
-                      item_value = element
-                      if element.kind_of?(String)
-                        item_value = element % arguments_values
-                        puts " -- item_value : #{item_value} element : #{element}"
-                        if e_m=element.match(/\{(\d+)\}/)
-                          item_value=@view_arguments[e_m[1]].typecast(item_value)
-                          puts " --- item_value : #{item_value}"
-                        end
-                      end
-                      item_value
-                    end
+            values = []
+            value.each do |value_item|
+              if value_item.kind_of?(String)
+                argument_in_value, value_item = process_value(value_item) 
+                if argument_in_value # the condition array item includes an argument
+                  if value_item.nil? 
+                    check_none_supplied_argument(argument_in_value)
+                  else
+                    values << value_item if check_supplied_argument(argument_in_value, value_item)
+                  end
+                else
+                  values << value_item
+                end
+              else
+                values << value_item
+              end
+            end
+            comparison = Conditions::Comparison.new(opts['field'], opts['operator'], values) if values.length > 0
+          else
+            comparison = Conditions::Comparison.new(opts['field'], opts['operator'], value)
           end
         end
         
-        puts "the value :#{value}"
-        
-        Conditions::Comparison.new(opts['field'], opts['operator'], value )
-      
+        return comparison
+
       end
     
       private
-    
+      
+      #
+      # Check howto act when the argument is not supplied
+      #
+      # @throws ViewArgumentNotSupplied if the argument is required and not supplied
+      #
+      def check_none_supplied_argument(argument_order)
+        if argument = view_arguments[argument_order] and argument.error_not_supplied_strategy?
+           raise ViewArgumentNotSupplied, "The argument #{argument_order} #{argument.name} is not supplied"
+        end 
+      end
+      
+      #
+      # Check howto act when the argument is supplied
+      #
+      # @return true if apply the condition or false if the value match the wildcard
+      #
+      def check_supplied_argument(argument_order, value)
+
+        apply_condition = false
+        
+        if argument = view_arguments[argument_order] and value != argument.wildcard
+          apply_condition = true
+        end
+
+        return apply_condition
+      end
+
+      #
+      # Analize the condition value and replace it from arguments if it necesary
+      # @param [Object]
+      #   The condition value
+      #
+      # @return [Object]
+      #   The condition value after replace it with arguments or the value if it's a primitive value
+      #   return nil if the value implies a argument replacement and it doesn't be 
+      #
+      def process_value(value)
+        
+        if argument = argument_in_value(value)
+          if view_arguments.has_key?(argument) and arguments_values.has_key?(argument.to_sym)
+            value = view_arguments[argument].typecast(value % arguments_values)
+          else
+            value = nil
+          end
+        end
+
+        return [argument, value]
+
+      end
+
+      #
+      # Get the argument key that exist in the value
+      #
+      # @return [String]
+      #
+      #  The argument represented in the value
+      #
+      def argument_in_value(value)
+        
+        argument_id = nil
+
+        if condition_argument=value.match(/\{(\d+)\}/)
+          argument_id = condition_argument[1] 
+        end
+
+        return argument_id
+
+      end
+
       #
       # Extract the query argument values from the string
       #
-      def query_arguments_values(arguments='')
+      # @return [Hash] the query arguments
+      #   The key is the element order and the value is the element value
+      #
+      def extract_arguments(arguments='')
       
         arguments ||= ''
         a_arguments = arguments.split("/")
@@ -371,14 +484,16 @@ module ContentManagerSystem
   #
   class ViewQueryArgument
       
-      attr_reader :order, :default, :wildcard, :type
+      attr_reader :order, :default, :wildcard, :type, :not_supplied_strategy
          
       def initialize(opts={})
       
         @order    = opts['order']
         @default  = opts['default']
-        @wildcard = opts['wildcard']
+        @wildcard = opts['wildcard'] || 'all'
         @type     = opts['type']
+        @name     = opts['name']
+        @not_supplied_strategy = opts['not_supplied_strategy'] || 'all'
       
       end
     
@@ -392,7 +507,15 @@ module ContentManagerSystem
                        end
               
       end
-    
+
+      def error_not_supplied_strategy?
+        not_supplied_strategy == 'error'
+      end
+      
+      def all_not_supplied_strategy?
+        not_supplied_strategy == 'all'
+      end
+
   end
         
 end #ContentManagerSystem

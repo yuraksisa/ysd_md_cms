@@ -1,4 +1,4 @@
-require "ysd_md_translation_content"
+require "ysd_md_translation_cms_content"
 
 module ContentManagerSystem
   
@@ -22,7 +22,7 @@ module ContentManagerSystem
       
       content = nil
     
-      if content_translation = ::Model::Translation::ContentTranslation.get(key)
+      if content_translation = ::ContentManagerSystem::Translation::ContentTranslation.get(key)
         translated_attributes = {}
         content_translation.get_translated_attributes(language_code).each {|term| translated_attributes.store(term.concept.to_sym, term.translated_text)}
         content = Content.new(key, attributes.merge(translated_attributes){ |key, old_value, new_value| new_value.to_s.strip.length > 0?new_value:old_value }) 
@@ -36,30 +36,23 @@ module ContentManagerSystem
     
     end
   
-  end #Content
-
-  class Content
-    include ContentManagerSystem::ContentTranslation # Extends the model to manage translation
-  
-    alias old_get_categories get_categories 
-  
     #
     # Retrieve the categories (translated)
     #
-    def get_categories
+    def get_translated_categories
         
       if not instance_variable_get(:@full_translated_categories) 
        if language_code
-         @full_translated_categories = old_get_categories.map { |term| term.translate(language_code) }
+         @full_translated_categories = get_categories.map { |term| term.translate(language_code) }
        else
-         @full_translated_categories = old_get_categories        
+         @full_translated_categories = get_categories        
        end
       end
       
       @full_translated_categories
     
-    end
+    end   
 
-  end
+  end #Content
 
 end #ContentManagerSystem

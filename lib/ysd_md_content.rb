@@ -8,6 +8,7 @@ require 'ysd_md_rac' unless defined?Users::ResourceAccessControlPersistence
 require 'support/ysd_md_cms_support' unless defined?ContentManagerSystem::Support
 require 'aspects/ysd-plugins_applicable_model_aspect' unless defined?Plugins::ApplicableModelAspect
 require 'ysd_md_state'
+require 'ysd_md_content_translation'
 
 module ContentManagerSystem
 
@@ -20,7 +21,8 @@ module ContentManagerSystem
     include Users::ResourceAccessControl             # Extends the model to Resource Access Control
     include Audit::Auditor                           # Extends the model to Audit
     include ContentManagerSystem::Publishable        # Extends the model to manage publication
-       
+    include ContentManagerSystem::ContentTranslation # Extends the model to manage translation
+
     extend ::ContentManagerSystem::Support::ContentExtractor # Content extractor
     
     property :alias, String           # An URL alias to the content
@@ -179,11 +181,10 @@ module ContentManagerSystem
       super(attributes)
     end
 
-    
     #
     # Get the content categories 
     #
-    # @return [Array] 
+    # @return [Array] array of ContentManagerSystem::Term 
     #
     #   A list of all content categories
     # 
@@ -192,9 +193,7 @@ module ContentManagerSystem
       if not instance_variable_get(:@full_categories)
        
         categories_list = []
-     
-        #puts "categories by taxonomy : #{categories_by_taxonomy}"
-     
+          
         if categories_by_taxonomy and categories_by_taxonomy.kind_of?Hash    
           categories_by_taxonomy.each do |taxonomy, terms|
             if terms.kind_of?(Array)
@@ -204,19 +203,15 @@ module ContentManagerSystem
             end               
           end
         end
-        
-        #puts "categories list: #{categories_list} #{categories_by_taxonomy} #{categories_by_taxonomy.class.name}"
-        
+                
         @full_categories = ContentManagerSystem::Term.all(:id => categories_list)
       
       end
-      
-      #puts "categories: #{@full_categories}"
-      
+            
       @full_categories
      
-    end
-    
+    end 
+
     #
     # Get the content type
     #
@@ -251,7 +246,7 @@ module ContentManagerSystem
       data = super
       
       data.store(:key, self.key)
-      data.store(:categories_info, self.get_categories)     
+      data.store(:categories_info, self.get_translated_categories)     
     
       data
     
@@ -266,9 +261,9 @@ module ContentManagerSystem
 
       {:type => :content, :id => key}
 
-    end
+    end   
   
-  end #end class Content 
+  end #Content 
   
-end #end module ContentManagerSystem
+end #ContentManagerSystem
 

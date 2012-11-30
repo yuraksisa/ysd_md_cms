@@ -1,7 +1,7 @@
 require 'data_mapper' unless defined?DataMapper
 require 'ysd_md_translation' unless defined?Model::Translation::Translation
 
-module Model
+module ContentManagerSystem
   module Translation
       #
       # Menu item translation
