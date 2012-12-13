@@ -5,6 +5,7 @@ module ContentManagerSystem
 
   #
   # Content type aspects 
+  # They represent the aspects that have been configured for the content type
   #
   class ContentTypeAspect
     include DataMapper::Resource
@@ -13,7 +14,7 @@ module ContentManagerSystem
     storage_names[:default] = 'cms_content_type_aspects'
     
     belongs_to :content_type, 'ContentManagerSystem::ContentType', :child_key => [:content_type_id], :parent_key => [:id], :key => true
-    property :aspect, String, :length => 32, :field => 'aspect', :key => true
+    property :aspect, String, :length => 32, :field => 'aspect', :key => true, :index => true, :unique_index => false
 
     alias old_save save
     

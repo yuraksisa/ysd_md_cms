@@ -7,7 +7,7 @@ require 'ysd_md_audit' unless defined?Audit::AuditorPersistence
 require 'ysd_md_rac' unless defined?Users::ResourceAccessControlPersistence
 require 'support/ysd_md_cms_support' unless defined?ContentManagerSystem::Support
 require 'aspects/ysd-plugins_applicable_model_aspect' unless defined?Plugins::ApplicableModelAspect
-require 'ysd_md_state'
+require 'ysd_md_publishing_state'
 require 'ysd_md_content_translation'
 
 module ContentManagerSystem
@@ -262,7 +262,18 @@ module ContentManagerSystem
       {:type => :content, :id => key}
 
     end   
-  
+
+    # ============ Resource info interface =================
+     
+    #
+    # Get the resource information
+    # 
+    def resource_info
+
+      "content_#{key}"
+
+    end
+
   end #Content 
   
 end #ContentManagerSystem

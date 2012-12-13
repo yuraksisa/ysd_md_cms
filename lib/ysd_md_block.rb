@@ -9,7 +9,7 @@ module ContentManagerSystem
     
     property :id, Serial, :field => 'id', :key => true
     
-    property :name, String, :field => 'name', :length => 32
+    property :name, String, :field => 'name', :length => 50
     property :module_name, String, :field => 'module_name', :length => 64
     
     property :theme, String, :field => 'theme', :length => 32 
@@ -93,6 +93,7 @@ module ContentManagerSystem
       
       # Create the not existing blocks
       blocks.each do |block| 
+        puts "checking block #{block.inspect}"
         Block.first_or_create(block)    
       end
     

@@ -12,6 +12,8 @@ module Site
     # 
     def self.build(path, context)
       
+      app = context[:app]
+
       breadcrumb = Breadcrumb.new
       
       route = Routes.instance.get(path) 
@@ -25,7 +27,7 @@ module Site
       breadcrumb.pop 
       
       # Adds the home element
-      breadcrumb.unshift({:path => '/', :title => 'Home'})
+      breadcrumb.unshift({:path => '/', :title => app.t.breadcrumb.home})
       
       return breadcrumb
     

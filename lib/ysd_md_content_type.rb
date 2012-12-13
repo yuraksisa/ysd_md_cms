@@ -31,10 +31,12 @@ module ContentManagerSystem
     #
     def save
      
-      old_save
-
-      update_aspects
-      update_usergroups
+      transaction do |transaction|
+        old_save
+        update_aspects
+        update_usergroups
+        transaction.commit
+      end
 
     end
 
@@ -119,17 +121,20 @@ module ContentManagerSystem
         
         the_assigned_aspects = assigned_aspects.map { |ct_aspect| ct_aspect['aspect']  }
         
-        remove_aspects = ContentTypeAspect.all(:content_type => {:id => id}, 
-                                               :aspect.not => the_assigned_aspects )
+        removed_aspects = ContentTypeAspect.all({'content_type_id' => id, 
+                                                 :aspect.not => the_assigned_aspects} )
          
         # remove not existing aspects
-        if remove_aspects
-          remove_aspects.destroy      
+        if removed_aspects and removed_aspects.length > 0
+          removed_aspects.destroy      
         end
         
-        # add new aspects
+        # add new aspects or update the existing ones
         assigned_aspects.each do |ct_aspect|
-          if not ContentTypeAspect.get(ct_aspect['aspect'], ct_aspect['content_type']['id'])
+          if ctype_aspect = ContentTypeAspect.get(ct_aspect['aspect'], ct_aspect['content_type']['id'])
+            ctype_aspect.attributes= ct_aspect 
+            ctype_aspect.save
+          else
             ContentTypeAspect.create(ct_aspect)
           end
         end
@@ -147,7 +152,7 @@ module ContentManagerSystem
         
         the_assigned_usergroups = assigned_usergroups.map { |ct_usergroup| ct_usergroup['usergroup']['group']  }
 
-        remove_usergroups = ContentTypeUserGroup.all('content_type.id' => id, 
+        remove_usergroups = ContentTypeUserGroup.all('content_type_id' => id, 
                                                      'usergroup.group.not' => the_assigned_usergroups )
         
         # remove not existing aspects
@@ -195,18 +200,15 @@ module ContentManagerSystem
     # Update aspects
     #    
     def update_aspects
-      
       if @assigned_aspects
         assign_aspects(@assigned_aspects)
       end
-          
     end
     
     #
     # Update usergroups
     #
     def update_usergroups
-      puts "updating usergroups #{@assigned_usergroups}"
       if @assigned_usergroups
         assign_usergroups(@assigned_usergroups)
       end

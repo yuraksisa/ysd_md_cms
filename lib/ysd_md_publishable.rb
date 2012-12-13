@@ -1,10 +1,18 @@
-require 'ysd_md_published_state'
+require 'ysd_md_publishing_state'
 require 'ysd-md-user-profile' unless defined?Users::Profile
 require 'ysd-md-business_events' unless defined?BusinessEvents::BusinessEvent
 
 module ContentManagerSystem
   #
   # Module which can be included in any resource to manage the publish state
+  #
+  # The classes that include this modules must implement the publication_info method, in order to
+  # communicate to business events that a publication has been published
+  #
+  # This method returns a hash with 2 elements:
+  #
+  #  :type
+  #  :id
   #
   module Publishable
     include Model::System::Request
@@ -17,7 +25,7 @@ module ContentManagerSystem
       if model.respond_to?(:property)
 
         model.property :publishing_state, String, :length => 10          # The content state (it must be a ContentManagerSystem::PublishedState instance)
-        model.property :publishing_workflow, String, :lenght => 20       # The default workflow
+        model.property :publishing_workflow, String, :length => 20       # The default workflow
 
         model.property :publishing_date, DateTime                        # The publishing date
         model.property :publishing_publisher, String, :length => 20      # The publisher (user)
@@ -146,6 +154,7 @@ module ContentManagerSystem
         if new_state != PublishingState::PENDING_CONFIRMATION
           self.publishing_confirmation_date = Time.now
         end
+        check_published
         save if self.respond_to?(:save)
         BusinessEvents::BusinessEvent.fire_event(:publication_confirmed, publication_info)
       end 
@@ -163,6 +172,7 @@ module ContentManagerSystem
           self.publishing_validation_date = Time.now
           self.publishing_validation_user = connected_user.username
         end
+        check_published
         save if self.respond_to?(:save)
         BusinessEvents::BusinessEvent.fire_event(:publication_validated, publication_info)
       end
@@ -258,6 +268,17 @@ module ContentManagerSystem
           end
 
     end
+
+    #
+    # Check if the publication state is published to assign publishing data
+    #
+    def check_published
+
+      if self.publishing_state == PublishingState::PUBLISHED
+        self.publishing_date = Time.now
+      end
+
+    end    
 
   end
 end

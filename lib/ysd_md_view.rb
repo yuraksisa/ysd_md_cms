@@ -147,7 +147,7 @@ module ContentManagerSystem
     @the_view_conditions = nil
     @the_view_order = nil
     @the_view_arguments = nil
-        
+    
     #
     # Get the view fields
     #
