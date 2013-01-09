@@ -34,24 +34,6 @@ module ContentManagerSystem
     end
     
     #
-    # Gets the variable name which stores the param value for the entity/aspect
-    #
-    def get_variable_name(attribute_id)
-     
-      "aspect.#{aspect}.ct.#{content_type.id}.#{attribute_id}"
-     
-    end
-    
-    #
-    # Gets the module name
-    #
-    def get_module_name
-    
-      return :cms
-    
-    end    
-
-    #
     # Generates the json
     #
     def as_json(options={})
@@ -63,6 +45,22 @@ module ContentManagerSystem
       
       super(options)
 
+    end    
+
+    # -------------- Aspect Configuration interface ---------------------------
+
+    #
+    # Gets the variable name which stores the param value for the entity/aspect
+    #
+    def get_variable_name(attribute_id)
+      "aspect.#{aspect}.ct.#{content_type.id}.#{attribute_id}"
+    end
+    
+    #
+    # Gets the module name
+    #
+    def get_module_name
+      return :cms
     end    
 
      

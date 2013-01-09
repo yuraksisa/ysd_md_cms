@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name    = "ysd_md_cms"
-  s.version = "0.2.2"
+  s.version = "0.2.11"
   s.authors = ["Yurak Sisa Dream"]
   s.date    = "2011-08-23"
   s.email   = ["yurak.sisa.dream@gmail.com"]
@@ -10,7 +10,8 @@ Gem::Specification.new do |s|
   
   s.add_runtime_dependency "data_mapper", "1.2.0"
   s.add_runtime_dependency "uuid", "2.3.5"        # UUID generator
-  
+  s.add_runtime_dependency "unicode_utils"        # Unicode Utils
+
   s.add_runtime_dependency "ysd-persistence"      # Persistence system
   s.add_runtime_dependency "ysd_md_comparison"    # Comparison
   s.add_runtime_dependency "ysd_md_profile"       # Block permissions

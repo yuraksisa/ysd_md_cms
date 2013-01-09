@@ -19,11 +19,16 @@ module ContentManagerSystem
 
     property :message_on_new_content, Text, :field => 'message_on_new_content'
     property :message_on_edit_content, Text, :field => 'message_on_edit_content'
+    
+    property :display, String, :field => 'display', :length => 40 # Display to render the content
+    property :template, Text, :field => 'template' # Template for creating content
+    property :max_length, Integer, :field => 'max_length', :default => 0 # Content max length
 
     has n, :aspects, 'ContentTypeAspect', :child_key => [:content_type_id], :parent_key => [:id], :constraint => :destroy, :order => [:weight.asc]
     has n, :usergroups, 'ContentTypeUserGroup', :child_key => [:content_type_id], :parent_key => [:id], :constraint => :destroy
     
     alias old_save save
+
     before :destroy, :check_before_destroy
 
     #
@@ -77,9 +82,7 @@ module ContentManagerSystem
     # Exporting to json
     #
     def as_json(options={})
-    
-      # Export the aspects and usergropus relationships
-
+ 
       relationships = options[:relationships] || {}
       relationships.store(:aspects, {:include => [:aspect, :content_type]})
       relationships.store(:usergroups, {:include => [:usergroup, :content_type]})
@@ -95,12 +98,10 @@ module ContentManagerSystem
     #
     # @return [Array] of Plugin::Aspect
     #
-    def applicable_aspects
-      
+    def applicable_aspects      
       Plugins::Aspect.all.select do |aspect| 
         Plugins::ModelAspect.aspects_applicable(ContentManagerSystem::Content).include?(aspect.model_aspect)
       end
-
     end
 
     #
@@ -109,9 +110,7 @@ module ContentManagerSystem
     # @return [Plugins::AspectConfiguration]
     #
     def aspect(aspect)
-
       (aspects.select { |ct_aspect| ct_aspect.aspect == aspect }).first
-
     end
 
     #
@@ -120,18 +119,19 @@ module ContentManagerSystem
     def assign_aspects(assigned_aspects)
         
         the_assigned_aspects = assigned_aspects.map { |ct_aspect| ct_aspect['aspect']  }
-        
+
+        # remove non existing aspects
         removed_aspects = ContentTypeAspect.all({'content_type_id' => id, 
                                                  :aspect.not => the_assigned_aspects} )
-         
-        # remove not existing aspects
         if removed_aspects and removed_aspects.length > 0
           removed_aspects.destroy      
         end
         
         # add new aspects or update the existing ones
         assigned_aspects.each do |ct_aspect|
-          if ctype_aspect = ContentTypeAspect.get(ct_aspect['aspect'], ct_aspect['content_type']['id'])
+          ct_aspect['content_type'] = {'id' => id}
+          aspect_attributes = ct_aspect.delete('aspect_attributes')
+          if ctype_aspect = ContentTypeAspect.get(ct_aspect['aspect'], id)
             ctype_aspect.attributes= ct_aspect 
             ctype_aspect.save
           else
@@ -140,7 +140,7 @@ module ContentManagerSystem
         end
             
         aspects.reload
-    
+
     end
     
     # --------------- Usergroups management --------------------
@@ -152,17 +152,16 @@ module ContentManagerSystem
         
         the_assigned_usergroups = assigned_usergroups.map { |ct_usergroup| ct_usergroup['usergroup']['group']  }
 
+        # remove not existing usergroups
         remove_usergroups = ContentTypeUserGroup.all('content_type_id' => id, 
                                                      'usergroup.group.not' => the_assigned_usergroups )
-        
-        # remove not existing aspects
         if remove_usergroups
           remove_usergroups.destroy      
         end
         
-        # add new aspects
+        # add new usergroups
         assigned_usergroups.each do |ct_usergroup|
-          if not ContentTypeUserGroup.get(ct_usergroup['content_type']['id'], ct_usergroup['usergroup']['group'])
+          if not ContentTypeUserGroup.get(id, ct_usergroup['usergroup']['group'])
             ContentTypeUserGroup.create(ct_usergroup)
           end
         end
@@ -171,7 +170,7 @@ module ContentManagerSystem
     
     end    
     
-    # ------------- Work flow ---------------------------------
+    # ------------- Workflow ---------------------------------
 
     #
     # Get the publishing workflow

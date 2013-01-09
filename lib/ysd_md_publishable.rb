@@ -54,10 +54,8 @@ module ContentManagerSystem
       
       if model.respond_to?(:before)
 
-        before :create do
-                    
+        model.before :create do
           init_data
-
         end
 
       end
