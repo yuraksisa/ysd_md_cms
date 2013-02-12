@@ -47,8 +47,8 @@ module ContentManagerSystem
 
       available_steps = steps.select do |_step|
         _step.current_state == publication.get_publishing_state and
-        _step.composer_usergroups.any? { |ug| publication.get_composer_user.usergroups.include?(ug) } and
-        _step.executor_usergroups.any? { |ug| publication.connected_user.usergroups.include?(ug) }       
+                               _step.composer_usergroups.any? { |ug| publication.get_composer_user.usergroups.include?(ug) } and
+                               _step.executor_usergroups.any? { |ug| publication.connected_user.usergroups.include?(ug) }       
       end
      
       unless action.nil?

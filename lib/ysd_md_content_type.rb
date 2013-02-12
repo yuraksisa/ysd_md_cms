@@ -25,7 +25,9 @@ module ContentManagerSystem
     property :max_length, Integer, :field => 'max_length', :default => 0 # Content max length
 
     has n, :aspects, 'ContentTypeAspect', :child_key => [:content_type_id], :parent_key => [:id], :constraint => :destroy, :order => [:weight.asc]
-    has n, :usergroups, 'ContentTypeUserGroup', :child_key => [:content_type_id], :parent_key => [:id], :constraint => :destroy
+
+    has n, :content_type_user_groups, 'ContentTypeUserGroup', :child_key => [:content_type_id], :parent_key => [:id], :constraint => :destroy
+    has n, :usergroups, 'Users::Group', :through => :content_type_user_groups, :via => :usergroup
     
     alias old_save save
 
@@ -37,9 +39,9 @@ module ContentManagerSystem
     def save
      
       transaction do |transaction|
+        check_usergroups! if self.usergroups and (not self.usergroups.empty?)
         old_save
         update_aspects
-        update_usergroups
         transaction.commit
       end
 
@@ -50,7 +52,7 @@ module ContentManagerSystem
     #
     def can_be_created_by?(user)
       
-      user.usergroups.any? {usergroups.map {|ctug| ctug.usergroup.group}}
+      not (user.usergroups & usergroups).empty?
 
     end
     
@@ -61,11 +63,7 @@ module ContentManagerSystem
       if (name.to_sym == :aspects)
         @assigned_aspects = value
       else
-        if (name.to_sym == :usergroups)
-          @assigned_usergroups = value
-        else
-          super(name, value)
-        end
+        super(name, value)
       end
     end
    
@@ -74,7 +72,6 @@ module ContentManagerSystem
     #
     def attributes=(attributes)
       @assigned_aspects = attributes.delete('aspects')
-      @assigned_usergroups = attributes.delete('usergroups')
       super(attributes)
     end
 
@@ -85,7 +82,7 @@ module ContentManagerSystem
  
       relationships = options[:relationships] || {}
       relationships.store(:aspects, {:include => [:aspect, :content_type]})
-      relationships.store(:usergroups, {:include => [:usergroup, :content_type]})
+      relationships.store(:usergroups, {})
 
       super(options.merge({:relationships => relationships}))
     
@@ -142,33 +139,7 @@ module ContentManagerSystem
         aspects.reload
 
     end
-    
-    # --------------- Usergroups management --------------------
-
-    #
-    # Assign usergroups to the content type
-    #
-    def assign_usergroups(assigned_usergroups)
-        
-        the_assigned_usergroups = assigned_usergroups.map { |ct_usergroup| ct_usergroup['usergroup']['group']  }
-
-        # remove not existing usergroups
-        remove_usergroups = ContentTypeUserGroup.all('content_type_id' => id, 
-                                                     'usergroup.group.not' => the_assigned_usergroups )
-        if remove_usergroups
-          remove_usergroups.destroy      
-        end
-        
-        # add new usergroups
-        assigned_usergroups.each do |ct_usergroup|
-          if not ContentTypeUserGroup.get(id, ct_usergroup['usergroup']['group'])
-            ContentTypeUserGroup.create(ct_usergroup)
-          end
-        end
-            
-        usergroups.reload
-    
-    end    
+       
     
     # ------------- Workflow ---------------------------------
 
@@ -182,7 +153,19 @@ module ContentManagerSystem
     end
 
     private
-     
+    
+    def check_usergroups!
+
+      self.usergroups.map! do |ug|
+        if (not ug.saved?) and loaded_usergroup = Users::Group.get(ug.group)
+          loaded_usergroup
+        else
+          ug
+        end 
+      end
+
+    end
+
     #
     # Check the content type before destroying it
     #
@@ -204,14 +187,6 @@ module ContentManagerSystem
       end
     end
     
-    #
-    # Update usergroups
-    #
-    def update_usergroups
-      if @assigned_usergroups
-        assign_usergroups(@assigned_usergroups)
-      end
-    end
 
   end #ContentType
 end #ContentManagerSystem

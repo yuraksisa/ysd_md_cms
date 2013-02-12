@@ -1,6 +1,7 @@
 require 'ysd_md_publishing_state'
 require 'ysd-md-user-profile' unless defined?Users::Profile
 require 'ysd-md-business_events' unless defined?BusinessEvents::BusinessEvent
+require 'ysd-md-user-connected_user'
 
 module ContentManagerSystem
   #
@@ -15,7 +16,7 @@ module ContentManagerSystem
   #  :id
   #
   module Publishable
-    include Model::System::Request
+    include Users::ConnectedUser
 
     #
     # When the model is included in a class
@@ -55,7 +56,7 @@ module ContentManagerSystem
       if model.respond_to?(:before)
 
         model.before :create do
-          init_data
+          init_publishable_data
         end
 
       end
@@ -84,7 +85,7 @@ module ContentManagerSystem
     #
     def save_publication
       
-      init_data
+      init_publishable_data
 
       if get_publishing_workflow.is_accepted?(self, PublishingAction::SAVE)
         self.publishing_state = PublishingState::DRAFT.id
@@ -128,7 +129,7 @@ module ContentManagerSystem
     #
     def publish_publication
 
-      init_data
+      init_publishable_data
 
       if new_state = get_publishing_workflow.next_state(self, PublishingAction::PUBLISH)
         self.publishing_state = new_state.id 
@@ -241,13 +242,13 @@ module ContentManagerSystem
     #
     def get_composer_user
 
-      @the_composer_user ||= (Users::Profile.get(composer_user) || Users::Profile::ANONYMOUS_USER)
+      @the_composer_user ||= (Users::Profile.get(composer_user) || Users::Profile.ANONYMOUS_USER)
 
     end
 
     private
 
-    def init_data
+    def init_publishable_data
 
           # Sets the composer user
           if self.composer_user.nil? or self.composer_user == ''

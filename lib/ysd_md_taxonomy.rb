@@ -17,11 +17,12 @@ module ContentManagerSystem
     property :weight, Integer, :field => 'weight', :default => 0
     
     has n, :taxonomy_content_types, 'TaxonomyContentType', :child_key => [:taxonomy_id, :content_type_id], :parent_key => [:id], :constraint => :destroy
+    has n, :content_types, 'ContentType', :through => :taxonomy_content_types, :via => :content_type
 
     alias old_save save
 
     #
-    # Assign a new usergroup list to the block
+    # Assign content types to the taxonomy
     #
     # @param [Array] new_content_types
     #

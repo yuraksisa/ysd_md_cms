@@ -9,7 +9,7 @@ module ContentManagerSystem
       def self.included(model)
 
         if model.respond_to?(:property)
-          model.property :content_place, String, :length => 32 # Reference to a content
+          model.property :content_place, String, :field => 'content_place', :length => 32 # Reference to a content
         end
 
       end

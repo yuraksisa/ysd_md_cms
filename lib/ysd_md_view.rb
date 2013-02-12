@@ -61,7 +61,7 @@ module ContentManagerSystem
     # @return [Array]
     #   The data that matches the query
     #
-    def get_data(page=1, arguments="")
+    def get_data(page=1, arguments="", context={})
 
       the_model = (Persistence::Model.descendants.select { |model| model_name == model.model_name.downcase }).first  
       
@@ -76,9 +76,8 @@ module ContentManagerSystem
       query = {}
       
       # conditions
-      if vc=view_conditions(arguments) and not vc.comparison.nil?
+      if vc=view_conditions(arguments, context) and not vc.comparison.nil?
         if the_model.included_modules.include?(DataMapper::Resource)
-          puts "comparisons : #{vc.comparison.build_sql}"
           query.store(:conditions, vc.comparison.build_sql)
         else
           query.store(:conditions, vc.comparison)
@@ -104,7 +103,7 @@ module ContentManagerSystem
       if q_total_records > 0
 
         # order
-        if vo=view_order
+        if vo=view_order and not vo.empty?
           if the_model.included_modules.include?(DataMapper::Resource)
             query.store(:order, vo.map { |vo_item| DataMapper::Query::Operator.new(vo_item.field.to_sym, vo_item.order.to_sym) })
           else
@@ -132,7 +131,6 @@ module ContentManagerSystem
           if pagination and q_page_size >= 1
             q_total_pages = (q_total_records/q_page_size).ceil       
           end
-          
           q_data = the_model.all(query.merge(query_limit))
         end
       
@@ -175,11 +173,11 @@ module ContentManagerSystem
     # 
     # @return
     #
-    def view_conditions(arguments_values='')
+    def view_conditions(arguments_values='', context={})
     
       unless @processed_conditions 
         if not query_conditions.nil?
-          @the_view_conditions = ViewQueryConditions.new(query_conditions, view_arguments, arguments_values)
+          @the_view_conditions = ViewQueryConditions.new(query_conditions, view_arguments, arguments_values, context)
         end
       end
       
@@ -268,13 +266,13 @@ module ContentManagerSystem
   #
   class ViewQueryConditions
     
-      attr_reader :comparison, :view_arguments, :arguments_values
+      attr_reader :comparison, :view_arguments, :arguments_values, :context
     
-      def initialize(opts={}, v_arguments, arguments)
+      def initialize(opts={}, v_arguments, arguments, the_context)
+        @context = the_context || {}
         @view_arguments = v_arguments                    # the arguments definitions
         @arguments_values = extract_arguments(arguments) # the arguments values      
         @comparison = process_comparison(opts)
-        puts "view comparisons: #{@comparison.inspect}"
       end
 
       private 
@@ -337,7 +335,7 @@ module ContentManagerSystem
               comparison = Conditions::Comparison.new(opts['field'], opts['operator'], value) if check_supplied_argument(argument_in_value, value)
             end
           else
-            comparison = Conditions::Comparison.new(opts['field'], opts['operator'], value)
+            comparison = Conditions::Comparison.new(opts['field'], opts['operator'], eval_value(value))
           end  
         else
           if value.kind_of?(Array)
@@ -352,7 +350,7 @@ module ContentManagerSystem
                     values << value_item if check_supplied_argument(argument_in_value, value_item)
                   end
                 else
-                  values << value_item
+                  values << eval_value(value_item)
                 end
               else
                 values << value_item
@@ -370,6 +368,29 @@ module ContentManagerSystem
     
       private
       
+      #
+      # Eval the value
+      #
+      def eval_value(value)
+
+        me = nil 
+        content = nil
+        profile = nil 
+
+        unless context.nil?
+          me      = context[:me]
+          content = context[:current_content]
+          profile = context[:current_profile]
+        end
+
+        if value.match(/#\{(.+)\}/)
+         eval('"'<<value<<'"') 
+        else
+         value
+        end
+        
+      end
+
       #
       # Check howto act when the argument is not supplied
       #

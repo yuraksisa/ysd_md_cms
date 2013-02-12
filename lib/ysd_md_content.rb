@@ -1,14 +1,16 @@
-require 'ysd-persistence' 
-require 'uuid'
+require 'data_mapper' unless defined?DataMapper
 require 'base64'
 require 'unicode_utils' unless defined?UnicodeUtils
 require 'ysd-plugins' unless defined?Plugins::ApplicableModelAspect
+require 'ysd_md_yito'
 require 'ysd_md_audit' unless defined?Audit::AuditorPersistence
 require 'ysd_md_rac' unless defined?Users::ResourceAccessControlPersistence
-require 'support/ysd_md_cms_support' unless defined?ContentManagerSystem::Support
+require 'ysd_md_publishable'
 require 'aspects/ysd-plugins_applicable_model_aspect' unless defined?Plugins::ApplicableModelAspect
 require 'ysd_md_publishing_state'
 require 'ysd_md_content_translation'
+require 'ysd_md_search'
+require 'ysd_dm_finder'
 
 module ContentManagerSystem
 
@@ -16,242 +18,150 @@ module ContentManagerSystem
   # It represents a content
   # -------------------------------------
   class Content
-    include Persistence::Resource
-    extend  Plugins::ApplicableModelAspect           # Extends the entity to allow apply aspects
+    include DataMapper::Resource
     include Users::ResourceAccessControl             # Extends the model to Resource Access Control
     include Audit::Auditor                           # Extends the model to Audit
     include ContentManagerSystem::Publishable        # Extends the model to manage publication
     include ContentManagerSystem::ContentTranslation # Extends the model to manage translation
-
-    extend ::ContentManagerSystem::Support::ContentExtractor # Content extractor
+    include Model::Searchable                        # Searchable
+    extend  Plugins::ApplicableModelAspect           # Extends the entity to allow apply aspects
+    extend  Yito::Model::Finder
     
-    property :alias, String           # An URL alias to the content
-   
-    property :title, String           # The content title
-    property :subtitle, String        # The content subtitle
-    property :description, String     # The content description
-    property :summary, String         # The content summary
-    property :keywords, String        # The key words (important words)
-    property :language, String        # The language in which the content has been written
-    property :author, String          # The content author
+    storage_names[:default] = 'cms_contents'
+    
+    property :id, Serial, :field => 'id', :key => true              # The content id
 
-    property :type, String                    # The content type (it must exist the ContentManagerSystem::ContentType)
-    property :categories, Object              # The content category (an array of ContentManagerSystem::Term)
-    property :categories_by_taxonomy, Object  # The categories organized by taxonomy
+    property :title, String, :field => 'title', :length => 120      # The content title
+    property :body, Text, :field => 'body'                          # The content body (text)
+    property :subtitle, String, :field => 'subtitle', :length => 80 # The content subtitle
+    property :description, Text, :field => 'description'            # The content description
+    property :summary, Text, :field => 'summary'                    # The content summary
+    property :keywords, Text, :field => 'keywords'                  # The key words (important words)
+    property :language, String, :field => 'language', :length => 3  # The language in which the content has been written
+    property :author, String, :field => 'author', :length => 80     # The content author
 
-    property :body, String            # The content
+    property :alias, String, :field => 'alias', :length => 80       # An URL alias to the content
+
+    belongs_to :content_type, :child_key => [:type] , :parent_key => [:id] 
+    
+    has n, :content_categories, 'ContentCategory', :child_key => [:content_id], :parent_key => [:id], :constraint => :destroy #, :through => :content_categories, :via => :category
+    has n, :categories, 'Term', :through => :content_categories, :via => :category # To access directly to the term (instead on passing by ContentCategory)
+    
+    searchable [:title, :subtitle, :body, :description, :summary]
+
+    alias old_save save 
+
+    #
+    # Override save to load the content type if it's necessary
+    #
+    def save
+      
+      transaction do |transaction|
+        
+        check_content_type! if self.content_type # Update the content type
+        check_categories!   if self.categories and not self.categories.empty? # Update the categories
+
+        old_save
+
+        transaction.commit
+
+      end
+
+    end
+
+    # Hooks
+
+    before :create do
+      
+      if self.alias.nil? or self.alias.empty?     
+        self.alias = File.join('/', self.content_type.id.downcase, Time.now.strftime('%Y%m%d') , UnicodeUtils.nfkd(self.title).gsub(/[^\x00-\x7F]/,'').gsub(/\s/,'-'))
+      end
+
+    end
 
     # ========================= Finders ===========================
-    
-    #
-    # @param [Hash] options
-    #   
-    #   :limit
-    #   :offset
-    #   :count
-    #
-    # @return [Array]
-    #
-    #   Instances of ContentManagerSystem::Content
-    #
-    def self.find_all(options={})
-    
-      query_options = {}
-      
-      query_options.store(:limit, options[:limit] || 10)
-      query_options.store(:offset, options[:offset] || 0)
-      query_options.store(:order, options[:order] || [['creation_date','desc']])
-      query_options.store(:conditions, options[:conditions]) if options.has_key?(:conditions)
-      
-      count = options[:count] || true
-
-      result = []
-    
-      result << Content.all(query_options)
-      
-      if count
-        count_conditions = {}
-        if query_options.has_key?(:conditions)
-          count_conditions.store(:conditions, query_options[:conditions])
-        end
-        result << Content.count(count_conditions)
-      end
-      
-      if result.length == 1
-        result = result.first
-      end
-      
-      result
-              
-    end
-    
+        
     #
     # Retrieve the tagged contents
     # 
     # @param [String] term_id
     #  The term id
     #
-    def self.find_by_term(term_id)
-      
-      Content.all({:conditions => Conditions::Comparison.new(:categories, '$in', [term_id.to_i]), :order => [['creation_date','desc']]})
-    
+    def self.find_by_category(term_id)
+      Content.all(:content_categories => {:category => {:id => term_id}}, :order => [:creation_date.desc])
     end    
     
-    
-    # ======================= Class methods =======================
-
-    #
-    # Create a new content
-    #
-    # @param [Hash] options
-    #
-    #  Content attributes
-    #
-    #
-    def self.create(*args)
-      
-      if (args.size == 1)
-        options = args.first
-      else
-        if (args.size == 2)
-           key = args.first
-           options = args.last
-        end
-      end
-          
-      # creates the alias
-           
-      content = Content.new(key, options) 
-      
-      if content.alias.strip.length == 0     
-        alias_str = UnicodeUtils.nfkd(content.title).gsub(/[^\x00-\x7F]/,'').gsub(/\s/,'-')
-        content.attribute_set(:alias, File.join('/', content.type, Time.now.strftime('%Y%m%d') , alias_str))
-      end
-      
-      content.create
-      
-      return content
-    
-    end
-    
-    #
-    # Create a content from a file
-    #
-    # @param [String] the file path
-    # @return [ContentManagerSystem::Content] the content
-    #
-    def self.new_from_file(file_path)
-    
-      resource_name = File.basename(file_path, File.extname(file_path))
-      content = Content.new(resource_name, parse_content_file(file_path))
-    
-    end
-    
     # ============== Instance methods =====================
-
-    def initialize(key, data={})
-
-     key ||= UUID.generator.generate(:compact)
-     super(key, data)
-
-    end
 
     #
     # Overwritten to initialize the publishing workflow when the type is assigned
     #
     def attribute_set(name, value) 
+      
       super(name, value)
-      if (name.to_sym == :type)
-        if c_type = ContentType.get(value)
-          attribute_set(:publishing_workflow, c_type.publishing_workflow)
-        end
+      
+      if (name.to_sym == :content_type) 
+        check_content_type!
+        check_publishing_workflow!
       end
+
     end
    
     #
     # Overwritten to initialize the publishing workflow when the type is assigned
     #
     def attributes=(attributes)
-      if attributes.has_key?(:type) and (not attributes.has_key?(:publishing_workflow)) and c_type=ContentType.get(attributes[:type])
-        attributes.merge!({:publishing_workflow => c_type.publishing_workflow})
-      end
-      if (not attributes.has_key?(:publishing_state)) and ((publishing_state.nil?) or (publishing_state == ''))
-        attributes.merge!({:publishing_state => nil})
-      end
+      
+      attributes.symbolize_keys! 
+
       super(attributes)
-    end
 
-    #
-    # Get the content categories 
-    #
-    # @return [Array] array of ContentManagerSystem::Term 
-    #
-    #   A list of all content categories
-    # 
-    def get_categories
-    
-      if not instance_variable_get(:@full_categories)
-       
-        categories_list = []
-          
-        if categories_by_taxonomy and categories_by_taxonomy.kind_of?Hash    
-          categories_by_taxonomy.each do |taxonomy, terms|
-            if terms.kind_of?(Array)
-              categories_list.concat(terms)   
-            else
-              categories_list << terms
-            end               
-          end
-        end
-                
-        @full_categories = ContentManagerSystem::Term.all(:id => categories_list)
-      
-      end
-            
-      @full_categories
-     
-    end 
-
-    #
-    # Get the content type
-    #
-    def get_content_type
-      
-      if type.nil?
-        return nil
+      if attributes.has_key?(:content_type) and not attributes.has_key?(:publishing_workflow)
+        check_content_type!
+        check_publishing_workflow!
       end
 
-      @content_type ||= ContentType.get(type)
-
     end
-        
+
     # ============ Exporting the objects =================
     
-    # Serializes the object to json
     #
-    # Adds the categories_info
+    # Serializes the object to json
     # 
-    def to_json(options={})
+    def as_json(options={})
  
-      data = exportable_attributes
-      data.to_json
+      methods = options[:methods] || []
+      methods << :categories_by_taxonomy
+      methods << :translated_categories
+
+      relationships = options[:relationships] || {}
+      relationships.store(:content_type, {})
+      relationships.store(:categories, {:include => [:content, :category]})      
   
+      super(options.merge({:relationships => relationships, :methods => methods}))
+
     end 
     
     #
-    # Get a hash with the exportable attributes
+    # Return the categories grouped by taxonomy
     #
-    def exportable_attributes
-            
-      data = super
-      
-      data.store(:key, self.key)
-      data.store(:categories_info, self.get_translated_categories)     
-    
-      data
-    
+    # @return [Hash] The key is the taxonomy id and the value is an array of terms
+    #
+    def categories_by_taxonomy
+
+      self.categories.inject({}) do |result, category|
+         
+        if result.has_key?(category.taxonomy.id.to_sym)
+          result[category.taxonomy.id.to_sym] << category
+        else
+          result[category.taxonomy.id.to_sym] = [category]
+        end
+        
+        result 
+      end    
+
     end
-    
+
     # ============ Publication interface ===================
     
     #
@@ -259,10 +169,16 @@ module ContentManagerSystem
     #
     def publication_info
 
-      {:type => :content, :id => key}
+      {:type => :content, :id => id}
 
     end   
 
+    # ============ Path interface ==========================
+
+    def path
+      "/content/#{id}"
+    end
+ 
     # ============ Resource info interface =================
      
     #
@@ -270,10 +186,45 @@ module ContentManagerSystem
     # 
     def resource_info
 
-      "content_#{key}"
+      "content_#{id}"
 
     end
+    
+    private 
+    
+    #
+    # Check the content type
+    #
+    def check_content_type!
 
+      if self.content_type and (not self.content_type.saved?) and loaded_content_type = ContentType.get(self.content_type.id)
+        self.content_type = loaded_content_type
+      end
+
+    end
+    
+    #
+    # Check the content publishing workflow
+    #
+    def check_publishing_workflow!
+      self.publishing_workflow = content_type.publishing_workflow
+    end
+
+    #
+    # Check the content categories
+    #
+    def check_categories!
+
+     self.categories.map! do |category|
+        if (not category.saved?) and loaded_category = Term.get(category.id)
+          loaded_category
+        else
+          category
+        end
+     end
+
+    end
+    
   end #Content 
   
 end #ContentManagerSystem
