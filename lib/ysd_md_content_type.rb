@@ -15,7 +15,7 @@ module ContentManagerSystem
     property :id, String, :field => 'id', :length => 20, :key => true    
     property :name, String, :field => 'name', :length => 50
     property :description, String, :field => 'description', :length => 256
-    property :publishing_workflow, String, :field => 'publishing_workflow', :length => 20   # The publication workflow
+    property :publishing_workflow_id, String, :field => 'publishing_workflow_id', :length => 20   # The publication workflow
 
     property :message_on_new_content, Text, :field => 'message_on_new_content'
     property :message_on_edit_content, Text, :field => 'message_on_edit_content'
@@ -71,7 +71,7 @@ module ContentManagerSystem
     # Overwritten to store the assigned aspects
     #
     def attributes=(attributes)
-      @assigned_aspects = attributes.delete('aspects')
+      @assigned_aspects = attributes.delete(:aspects)
       super(attributes)
     end
 
@@ -88,10 +88,10 @@ module ContentManagerSystem
     
     end
     
-    # ------------- Aspects management --------------
+    # ------------- Aspect entity interface --------------
 
     #
-    # Return the model applicable aspects
+    # Retrieve the aspects that can be applied to a content type
     #
     # @return [Array] of Plugin::Aspect
     #
@@ -102,37 +102,41 @@ module ContentManagerSystem
     end
 
     #
-    # Get a concrete aspects associated to the resource (::Model::EntityAspect)
+    # Get the aspect associated to the content type
+    #
+    # @param [String] The aspect identifier
     #
     # @return [Plugins::AspectConfiguration]
     #
     def aspect(aspect)
-      (aspects.select { |ct_aspect| ct_aspect.aspect == aspect }).first
+      (aspects.select { |content_type_aspect| content_type_aspect.aspect == aspect }).first
     end
+
+    # ------------ Aspects management ---------------
 
     #
     # Assign aspects to the content type
     #
     def assign_aspects(assigned_aspects)
         
-        the_assigned_aspects = assigned_aspects.map { |ct_aspect| ct_aspect['aspect']  }
+        the_assigned_aspects = assigned_aspects.map { |content_type_aspect| content_type_aspect[:aspect]  }
 
         # remove non existing aspects
-        removed_aspects = ContentTypeAspect.all({'content_type_id' => id, 
+        removed_aspects = ContentTypeAspect.all({:content_type => {:id => id}, 
                                                  :aspect.not => the_assigned_aspects} )
         if removed_aspects and removed_aspects.length > 0
           removed_aspects.destroy      
         end
         
         # add new aspects or update the existing ones
-        assigned_aspects.each do |ct_aspect|
-          ct_aspect['content_type'] = {'id' => id}
-          aspect_attributes = ct_aspect.delete('aspect_attributes')
-          if ctype_aspect = ContentTypeAspect.get(ct_aspect['aspect'], id)
-            ctype_aspect.attributes= ct_aspect 
+        assigned_aspects.each do |content_type_aspect|
+          content_type_aspect[:content_type] = {:id => id}
+          content_type_aspect.delete(:aspect_attributes)
+          if ctype_aspect = ContentTypeAspect.get(content_type_aspect[:aspect], id)
+            ctype_aspect.attributes= content_type_aspect 
             ctype_aspect.save
           else
-            ContentTypeAspect.create(ct_aspect)
+            ContentTypeAspect.create(content_type_aspect)
           end
         end
             
@@ -146,9 +150,9 @@ module ContentManagerSystem
     #
     # Get the publishing workflow
     #
-    def get_publishing_workflow
+    def publishing_workflow
 
-      @the_workflow ||= PublishingWorkflow.get(publishing_workflow)
+      @the_workflow ||= PublishingWorkflow.get(publishing_workflow_id)
 
     end
 

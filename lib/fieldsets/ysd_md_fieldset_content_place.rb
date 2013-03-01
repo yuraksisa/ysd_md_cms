@@ -8,32 +8,39 @@ module ContentManagerSystem
 
       def self.included(model)
 
-        if model.respond_to?(:property)
-          model.property :content_place, String, :field => 'content_place', :length => 32 # Reference to a content
+        if model.respond_to?(:belongs_to)
+          model.belongs_to :place, 'ContentManagerSystem::Content', :parent_key => [:id], :child_key => [:content_place_id], :required => false
         end
-
+        
       end
-    
+
       #
-      # Get the content referenced
       #
-      # @return [ContentManagerSystem::Content]
-      def place
-        @place ||= load_content_place
+      #
+      def save
+        check_place! if place
+      end      
+
+      #
+      #
+      #
+      def as_json(options={})
+
+        relationships = options[:relationships] || {}
+        relationships.store(:place,{})
+
+        super(options.merge(relationships))
+
       end
 
       private
-    
-      #
-      # Load the content place
-      #
-      def load_content_place
-        if content_place and content_place.strip.length > 0
-          ContentManagerSystem::Content.get(content_place)
-        else
-          nil
+
+      def check_place!
+        if self.place and (not self.place.saved?) and loaded_place = ContentManagerSystem::Content.get(self.place.id)
+          self.place = loaded_place
         end
       end
-    end
-  end
-end
+
+    end #ContentPlace
+  end #FieldSet
+end #ContentManagerSystem

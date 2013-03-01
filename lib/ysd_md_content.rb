@@ -1,8 +1,7 @@
 require 'data_mapper' unless defined?DataMapper
-require 'base64'
+require 'ysd_md_yito'
 require 'unicode_utils' unless defined?UnicodeUtils
 require 'ysd-plugins' unless defined?Plugins::ApplicableModelAspect
-require 'ysd_md_yito'
 require 'ysd_md_audit' unless defined?Audit::AuditorPersistence
 require 'ysd_md_rac' unless defined?Users::ResourceAccessControlPersistence
 require 'ysd_md_publishable'
@@ -14,9 +13,23 @@ require 'ysd_dm_finder'
 
 module ContentManagerSystem
 
-  # -------------------------------------
-  # It represents a content
-  # -------------------------------------
+  # --------------------------------------------------------------------------
+  # The information that manages the CMS are represented as contents: pages, 
+  # blog posts, articles, events, places are contents.
+  #
+  # A content belongs to a content type, which defines the content behaviour.
+  # Who can create it, the publishing workflow, the aspects that can be applied 
+  # to the content.
+  #
+  # A content can be categorized. It will help to get contents who belongs to 
+  # some categories.
+  #
+  # The content information can be translated into different languages.
+  #
+  # Contents are indexed by title, subtitle, body, description and summary. 
+  # You can use full text search based on this fields
+  #
+  # --------------------------------------------------------------------------
   class Content
     include DataMapper::Resource
     include Users::ResourceAccessControl             # Extends the model to Resource Access Control
@@ -57,6 +70,8 @@ module ContentManagerSystem
     def save
       
       transaction do |transaction|
+        
+        super
         
         check_content_type! if self.content_type # Update the content type
         check_categories!   if self.categories and not self.categories.empty? # Update the categories
@@ -116,7 +131,7 @@ module ContentManagerSystem
 
       super(attributes)
 
-      if attributes.has_key?(:content_type) and not attributes.has_key?(:publishing_workflow)
+      if attributes.has_key?(:content_type) and not attributes.has_key?(:publishing_workflow_id)
         check_content_type!
         check_publishing_workflow!
       end
@@ -207,7 +222,7 @@ module ContentManagerSystem
     # Check the content publishing workflow
     #
     def check_publishing_workflow!
-      self.publishing_workflow = content_type.publishing_workflow
+      self.publishing_workflow_id = content_type.publishing_workflow_id
     end
 
     #

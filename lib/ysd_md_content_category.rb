@@ -1,8 +1,13 @@
 require 'data_mapper' unless defined?(DataMapper)
 module ContentManagerSystem
+  # --------------------------------------------------------------
+  # Contents can be categorized. A content can belong to multiple 
+  # categories.
   #
-  # It represents the content category/ies
+  # Instances of ContentManagerSystem::ContentCategory represents
+  # the categories a content belongs to.
   #
+  # --------------------------------------------------------------
   class ContentCategory
     include DataMapper::Resource
 

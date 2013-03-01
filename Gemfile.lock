@@ -1,0 +1,178 @@
+PATH
+  remote: .
+  specs:
+    ysd_md_cms (0.2.19)
+      data_mapper (= 1.2.0)
+      unicode_utils
+      uuid (= 2.3.5)
+      ysd-persistence
+      ysd_core_plugins
+      ysd_md_audit
+      ysd_md_comparison
+      ysd_md_profile
+      ysd_md_rac
+      ysd_md_search
+      ysd_md_system
+      ysd_md_translation
+      ysd_md_yito
+
+PATH
+  remote: ~/proyectos/biblioteca.desarrollo/ruby/models/model_audit
+  specs:
+    ysd_md_audit (0.2.3)
+      data_mapper (= 1.2.0)
+      ysd-persistence (>= 0.2.0)
+      ysd_md_profile
+
+PATH
+  remote: ~/proyectos/biblioteca.desarrollo/ruby/models/model_comparison
+  specs:
+    ysd_md_comparison (0.2.4)
+
+PATH
+  remote: ~/proyectos/biblioteca.desarrollo/ruby/models/model_profile
+  specs:
+    ysd_md_profile (0.2.23)
+      data_mapper (= 1.2.0)
+      ysd-persistence
+      ysd_core_plugins
+      ysd_md_business_events
+      ysd_md_comparison
+      ysd_md_configuration
+      ysd_md_yito
+
+PATH
+  remote: ~/proyectos/biblioteca.desarrollo/ruby/models/model_rac
+  specs:
+    ysd_md_rac (0.2.11)
+      ysd_md_comparison
+      ysd_md_profile
+
+PATH
+  remote: ~/proyectos/biblioteca.desarrollo/ruby/models/model_search
+  specs:
+    ysd_md_search (0.2.2)
+      data_mapper (>= 1.2.0)
+
+PATH
+  remote: ~/proyectos/biblioteca.desarrollo/ruby/models/model_yito
+  specs:
+    ysd_md_yito (0.2.6)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    addressable (2.2.8)
+    bcrypt-ruby (3.0.1)
+    bson (1.8.2)
+    data_mapper (1.2.0)
+      dm-aggregates (~> 1.2.0)
+      dm-constraints (~> 1.2.0)
+      dm-core (~> 1.2.0)
+      dm-migrations (~> 1.2.0)
+      dm-serializer (~> 1.2.0)
+      dm-timestamps (~> 1.2.0)
+      dm-transactions (~> 1.2.0)
+      dm-types (~> 1.2.0)
+      dm-validations (~> 1.2.0)
+    data_objects (0.10.12)
+      addressable (~> 2.1)
+    diff-lcs (1.1.3)
+    dm-aggregates (1.2.0)
+      dm-core (~> 1.2.0)
+    dm-constraints (1.2.0)
+      dm-core (~> 1.2.0)
+    dm-core (1.2.0)
+      addressable (~> 2.2.6)
+    dm-do-adapter (1.2.0)
+      data_objects (~> 0.10.6)
+      dm-core (~> 1.2.0)
+    dm-migrations (1.2.0)
+      dm-core (~> 1.2.0)
+    dm-serializer (1.2.2)
+      dm-core (~> 1.2.0)
+      fastercsv (~> 1.5)
+      json (~> 1.6)
+      json_pure (~> 1.6)
+      multi_json (~> 1.0)
+    dm-sqlite-adapter (1.2.0)
+      dm-do-adapter (~> 1.2.0)
+      do_sqlite3 (~> 0.10.6)
+    dm-timestamps (1.2.0)
+      dm-core (~> 1.2.0)
+    dm-transactions (1.2.0)
+      dm-core (~> 1.2.0)
+    dm-types (1.2.2)
+      bcrypt-ruby (~> 3.0)
+      dm-core (~> 1.2.0)
+      fastercsv (~> 1.5)
+      json (~> 1.6)
+      multi_json (~> 1.0)
+      stringex (~> 1.4)
+      uuidtools (~> 2.1)
+    dm-validations (1.2.0)
+      dm-core (~> 1.2.0)
+    do_sqlite3 (0.10.12)
+      data_objects (= 0.10.12)
+    fastercsv (1.5.5)
+    json (1.7.6)
+    json_pure (1.7.6)
+    macaddr (1.6.1)
+      systemu (~> 2.5.0)
+    mongo (1.8.2)
+      bson (~> 1.8.2)
+    multi_json (1.5.0)
+    rack (1.5.1)
+    rack-protection (1.3.2)
+      rack
+    rake (10.0.3)
+    rspec (2.12.0)
+      rspec-core (~> 2.12.0)
+      rspec-expectations (~> 2.12.0)
+      rspec-mocks (~> 2.12.0)
+    rspec-core (2.12.2)
+    rspec-expectations (2.12.1)
+      diff-lcs (~> 1.1.3)
+    rspec-mocks (2.12.2)
+    sinatra (1.3.3)
+      rack (~> 1.3, >= 1.3.6)
+      rack-protection (~> 1.2)
+      tilt (~> 1.3, >= 1.3.3)
+    stringex (1.5.1)
+    systemu (2.5.2)
+    tilt (1.3.3)
+    unicode_utils (1.4.0)
+    uuid (2.3.5)
+      macaddr (~> 1.0)
+    uuidtools (2.1.3)
+    ysd-persistence (0.2.31)
+      mongo
+      ysd_md_comparison
+      ysd_md_system
+    ysd_core_plugins (0.2.11)
+      data_mapper (= 1.2.0)
+      json
+      sinatra (~> 1.3)
+      ysd_md_configuration
+    ysd_md_business_events (0.2.0)
+      data_mapper (= 1.2.0)
+    ysd_md_configuration (0.2.0)
+      data_mapper (= 1.2.0)
+    ysd_md_system (0.2.0)
+    ysd_md_translation (0.2.0)
+      data_mapper (= 1.2.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  dm-sqlite-adapter
+  rake
+  rspec
+  ysd_md_audit!
+  ysd_md_cms!
+  ysd_md_comparison!
+  ysd_md_profile!
+  ysd_md_rac!
+  ysd_md_search!
+  ysd_md_yito!

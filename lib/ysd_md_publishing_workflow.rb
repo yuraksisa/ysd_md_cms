@@ -1,12 +1,14 @@
 require 'ysd_md_publishing_state'
 require 'ysd_md_publishing_action'
 require 'ysd_md_publishing_workflow_step'
+require 'ysd-md-user-connected_user'
 
 module ContentManagerSystem
   #
   # The publishing work flow
   #
   class PublishingWorkFlow
+    include Users::ConnectedUser
 
     attr_reader :id, :description, :initial_state, :steps
     
@@ -34,21 +36,25 @@ module ContentManagerSystem
     end
 
     #
-    # Retrieve a publication available steps 
+    # Retrieve the steps that can be applied to a publication
+    #
+    # The depend on the publication's current state, the publication composer and the current connected user
     #
     # @param [ContentManagerSystem::Publishable] the publication
-    # @param [ContentManagerSystem::PublishingAction] the action
     #
-    #  It's optional. If specified only get the available steps for the action
+    # @param [ContentManagerSystem::PublishingAction] the action to perform
+    #  It's optional. If it's specified only get the available steps for the action else get the 
+    #  the available steps for all the options
     #
     # return [Array] of WorkFlowStep
+    #  The available steps
     #
     def available_steps(publication, action=nil)
 
-      available_steps = steps.select do |_step|
-        _step.current_state == publication.get_publishing_state and
-                               _step.composer_usergroups.any? { |ug| publication.get_composer_user.usergroups.include?(ug) } and
-                               _step.executor_usergroups.any? { |ug| publication.connected_user.usergroups.include?(ug) }       
+      available_steps = steps.select do |step|
+         (step.current_state == publication.publishing_state) and
+         (not (step.composer_usergroups & publication.composer_user.usergroups.map{|usergroup| usergroup.group}).empty?) and # composer usergroups
+         (not (step.executor_usergroups & connected_user.usergroups.map{|usergroup| usergroup.group}).empty?)                    # executor usergroups
       end
      
       unless action.nil?

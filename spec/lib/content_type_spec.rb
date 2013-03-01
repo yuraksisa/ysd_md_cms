@@ -16,7 +16,7 @@ describe ContentManagerSystem::ContentType do
     @admin_user = Users::RegisteredProfile.create({:username => 'ct_admin', :password => '1234', :usergroups => [@staff_group]})
 
     @content_type = ContentManagerSystem::ContentType.new({:id => 'ct_page', :name => 'Page', :description => 'Page',
-                                                           :publishing_workflow => 'standard', 
+                                                           :publishing_workflow_id => 'standard', 
                                                            :usergroups => [@user_group]
                                                           })
 

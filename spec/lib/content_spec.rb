@@ -13,7 +13,7 @@ describe ContentManagerSystem::Content do
     @user_group = Users::Group.create({:group => 'user' , :name => 'Users' , :description => 'Generic users'})
 
     @content_type = ContentManagerSystem::ContentType.create({:id => 'page', :name => 'Page', :description => 'Page',
-                                                              :publishing_workflow => 'standard', :content_type_user_groups => [{:usergroup => @user_group}]})
+                                                              :publishing_workflow_id => 'standard', :content_type_user_groups => [{:usergroup => @user_group}]})
 
     @taxonomy = ContentManagerSystem::Taxonomy.create({:id => 'countries', :name => 'Countries', :description => 'Countries taxonomy', :weight => 0,
     	                                                :taxonomy_content_types => [{:content_type => @content_type}]})
