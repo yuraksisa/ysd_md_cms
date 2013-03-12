@@ -29,8 +29,6 @@ module ContentManagerSystem
     has n, :content_type_user_groups, 'ContentTypeUserGroup', :child_key => [:content_type_id], :parent_key => [:id], :constraint => :destroy
     has n, :usergroups, 'Users::Group', :through => :content_type_user_groups, :via => :usergroup
     
-    alias old_save save
-
     before :destroy, :check_before_destroy
 
     #
@@ -40,7 +38,7 @@ module ContentManagerSystem
      
       transaction do |transaction|
         check_usergroups! if self.usergroups and (not self.usergroups.empty?)
-        old_save
+        super
         update_aspects
         transaction.commit
       end

@@ -13,9 +13,16 @@ module ContentManagerSystem
       
         storage_names[:default] = 'trans_content_translation'
         
-        property :content_id, String, :length => 32, :field => 'content_id', :key => true
+        belongs_to :content, 'ContentManagerSystem::Content', :parent_key => [:id], :child_key => [:content_id], :key => true
         belongs_to :translation, 'Model::Translation::Translation', :child_key => [:translation_id], :parent_key => [:id]
         
+        def destroy
+          transaction do
+            super
+            translation.destroy
+          end
+        end
+
         #
         # Creates or updates the content translation
         #
@@ -31,7 +38,7 @@ module ContentManagerSystem
               content_translation.set_translated_attributes(language_code, attributes)
             else
               translation = Model::Translation::Translation.create_with_terms(language_code, attributes) 
-              content_translation = ContentTranslation.create({:content_id => content_id, :translation => translation})
+              content_translation = ContentTranslation.create({:content => ContentManagerSystem::Content.get(content_id), :translation => translation})
             end
             
           end

@@ -19,6 +19,7 @@ module ContentManagerSystem
       #
       def save
         check_place! if place
+        super
       end      
 
       #

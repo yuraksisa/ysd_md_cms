@@ -1,5 +1,5 @@
 require 'data_mapper' unless defined?DataMapper
-require 'ysd-md-profile' unless defined?Users::Group
+require 'ysd_md_profile' unless defined?Users::Group
 
 module ContentManagerSystem
   #

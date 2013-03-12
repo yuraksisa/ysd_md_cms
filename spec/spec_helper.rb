@@ -9,9 +9,17 @@
 #
 #
 require 'data_mapper'
-require 'ysd_md_searchable'
-Model::Searchable.configure({:language => :en, :default_strategy => 'bonsai'})
 require 'ysd_md_cms'
+
+module DataMapper
+  class Transaction
+  	module SqliteAdapter
+      def supports_savepoints?
+        true
+      end
+  	end
+  end
+end
 
 DataMapper::Logger.new(STDOUT, :debug)
 DataMapper.setup :default, "sqlite3::memory:"

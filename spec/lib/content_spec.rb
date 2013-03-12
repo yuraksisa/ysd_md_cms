@@ -30,7 +30,7 @@ describe ContentManagerSystem::Content do
    	                                                  :content_categories => [{:category => {:id => @term_spain.id}}, {:category => {:id => @term_france.id}}] })
 
     @new_content_categories = ContentManagerSystem::Content.new({:title => 'foo', :body => 'bar', 
-      	                                              :subtitle => 'subtitle', :description => 'description',
+      	                                              :subtitle => 'subtitle categories', :description => 'description categories',
    	                                                  :summary => 'summary', :keywords => 'word1, word2',
    	                                                  :language => 'en', :author => 'me',
    	                                                  :content_type => {:id => 'page'},
@@ -62,7 +62,7 @@ describe ContentManagerSystem::Content do
   end
 
   it "should create a full content with categories and updates the content categories" do
-  
+   
    @new_content_categories.save
 
    loaded_content = ContentManagerSystem::Content.get(@new_content_categories.id)

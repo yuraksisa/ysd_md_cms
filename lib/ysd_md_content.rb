@@ -34,8 +34,8 @@ module ContentManagerSystem
     include DataMapper::Resource
     include Users::ResourceAccessControl             # Extends the model to Resource Access Control
     include Audit::Auditor                           # Extends the model to Audit
-    include ContentManagerSystem::Publishable        # Extends the model to manage publication
-    include ContentManagerSystem::ContentTranslation # Extends the model to manage translation
+    include Publishable                              # Extends the model to manage publication
+    include ContentTranslation                       # Extends the model to manage translation
     include Model::Searchable                        # Searchable
     extend  Plugins::ApplicableModelAspect           # Extends the entity to allow apply aspects
     extend  Yito::Model::Finder
@@ -62,8 +62,6 @@ module ContentManagerSystem
     
     searchable [:title, :subtitle, :body, :description, :summary]
 
-    alias old_save save 
-
     #
     # Override save to load the content type if it's necessary
     #
@@ -71,12 +69,10 @@ module ContentManagerSystem
       
       transaction do |transaction|
         
-        super
-        
         check_content_type! if self.content_type # Update the content type
         check_categories!   if self.categories and not self.categories.empty? # Update the categories
-
-        old_save
+        
+        super # Invokes the super class
 
         transaction.commit
 
