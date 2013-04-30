@@ -45,6 +45,7 @@ module ContentManagerSystem
     property :header, Text, :field => 'header' # Header text
     property :footer, Text, :field => 'footer' # Footer text
     property :script, Text, :field => 'script' # Script 
+    property :style, Text, :field => 'style'   # Style
     property :url, String, :field => 'url', :length => 256    # The url from which it can be accessed
     
     # Other view options

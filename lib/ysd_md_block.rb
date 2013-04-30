@@ -14,6 +14,7 @@ module ContentManagerSystem
     property :id, Serial, :field => 'id', :key => true
     
     property :name, String, :field => 'name', :length => 50
+    property :description, String, :field => 'description', :length => 256
     property :module_name, String, :field => 'module_name', :length => 64
     
     property :theme, String, :field => 'theme', :length => 32 
@@ -74,6 +75,34 @@ module ContentManagerSystem
     
     end
     
+    #
+    # Retrive the active blocks for some regions on a theme
+    #
+    # @param [Theme] The theme
+    # @param [Array] The regions
+    # @param [User] The user
+    # @param [String] The path
+    #
+    # @return [Hash] The key is the region and the value is an array of Block
+    # to show on the region
+    #
+    def self.active_blocks(theme, regions, user, path)
+      
+      result = {}
+
+      blocks = all(:conditions => {:theme => theme.name,
+        :region => regions}, :order => [:region.asc, :weight.asc])
+
+      blocks.each do |block|
+        region = block.region.to_sym
+        result.store(region, []) unless result.has_key?(region)
+        result[region].push(block) if block.can_be_shown?(user, path)          
+      end
+
+      return result
+
+    end
+
     #
     # Exporting the profile
     #  

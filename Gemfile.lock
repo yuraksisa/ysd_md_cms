@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ysd_md_cms (0.2.22)
+    ysd_md_cms (0.2.24)
       data_mapper (= 1.2.0)
       unicode_utils
       uuid (= 2.3.5)

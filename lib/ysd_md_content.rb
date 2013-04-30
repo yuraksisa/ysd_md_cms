@@ -46,13 +46,15 @@ module ContentManagerSystem
 
     property :title, String, :field => 'title', :length => 120      # The content title
     property :body, Text, :field => 'body'                          # The content body (text)
+    property :script, Text, :field => 'script'                      # The content script (text)
+    property :style, Text, :field => 'style'                        # The content style (text)
     property :subtitle, String, :field => 'subtitle', :length => 80 # The content subtitle
     property :description, Text, :field => 'description'            # The content description
     property :summary, Text, :field => 'summary'                    # The content summary
     property :keywords, Text, :field => 'keywords'                  # The key words (important words)
     property :language, String, :field => 'language', :length => 3  # The language in which the content has been written
     property :author, String, :field => 'author', :length => 80     # The content author
-
+    property :block, Boolean, :field => 'block', :default => false  # Use the content as a block
     property :alias, String, :field => 'alias', :length => 80       # An URL alias to the content
 
     belongs_to :content_type, :child_key => [:type] , :parent_key => [:id] 
