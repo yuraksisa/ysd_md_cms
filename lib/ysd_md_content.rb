@@ -8,7 +8,7 @@ require 'ysd_md_publishable'
 require 'aspects/ysd-plugins_applicable_model_aspect' unless defined?Plugins::ApplicableModelAspect
 require 'ysd_md_publishing_state'
 require 'ysd_md_content_translation'
-require 'ysd_md_search'
+require 'ysd_md_search' unless defined?Model::Searchable
 require 'ysd_dm_finder'
 
 module ContentManagerSystem

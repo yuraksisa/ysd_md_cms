@@ -64,77 +64,63 @@ module ContentManagerSystem
     #
     def get_data(page=1, arguments="", context={})
 
-      the_model = (Persistence::Model.descendants.select { |model| model_name == model.model_name.downcase }).first  
-      
-      unless the_model
-        the_model = (DataMapper::Model.descendants.select { |model| model_name == model.name.scan(/\w+$/)[0].downcase }).first
-      end    
+      the_model = (DataMapper::Model.descendants.select { |model| model_name == model.name.scan(/\w+$/)[0].downcase }).first
       
       unless the_model
         puts "The model is not defined. Has you require it?"
       end
 
-      query = {}
+      vc = view_conditions(arguments, context)
       
-      # conditions
-      if vc=view_conditions(arguments, context) and not vc.comparison.nil?
-        if the_model.included_modules.include?(DataMapper::Resource)
-          query.store(:conditions, vc.comparison.build_sql)
-        else
-          query.store(:conditions, vc.comparison)
-        end
-      end
-      
-      # pagination
-  
       q_total_records = 0      # The view total records
-      q_total_pages = 1        # The view total pages
+      q_total_pages = 0        # The view total pages
       q_data = []              # The view data (query result)
       q_page = page            # The view page that is being retrieved
       q_page_size = page_size  # The view page size
 
       if the_model
-        q_total_records = the_model.count(query)
-      end
-
-      if q_page_size == 0
-        q_page_size = q_total_records 
-      end
-
-      if q_total_records > 0
-
-        # order
-        if vo=view_order and not vo.empty?
-          if the_model.included_modules.include?(DataMapper::Resource)
-            query.store(:order, vo.map { |vo_item| DataMapper::Query::Operator.new(vo_item.field.to_sym, vo_item.order.to_sym) })
-          else
-            query.store(:order, vo.map { |vo_item| [vo_item.field, vo_item.order] })
-          end
-        end
-
-        if (q_page < 1) or (q_page > (q_total_records/q_page_size))
-          q_page = 1
-        end
-
-        query_limit = {}
-        if pagination
-          query_limit.store(:limit,  q_page_size)
-          query_limit.store(:offset, q_page_size * (q_page - 1))
+        
+        # Counts 
+        if vc.comparison.nil?
+            q_total_records = the_model.count
         else
-          if view_limit > 0
-            query_limit.store(:limit, view_limit)
-          end
+            q_total_records = vc.comparison.count_datamapper(the_model)
         end
-                                                       
-        # Executes the query
-      
-        if the_model        
+
+        q_page_size = q_total_records if q_page_size == 0
+
+        if q_total_records > 0
+
+          query_order = {} 
+          if vo=view_order and not vo.empty?
+            query_order.store(:order, vo.map { |vo_item| DataMapper::Query::Operator.new(vo_item.field.to_sym, vo_item.order.to_sym) })
+          end
+
+          query_limit = {}
+          if (q_page < 1) or (q_page > (q_total_records/q_page_size))
+            q_page = 1
+          end
+          if pagination
+            query_limit.store(:limit,  q_page_size)
+            query_limit.store(:offset, q_page_size * (q_page - 1))
+          else
+            if view_limit > 0
+              query_limit.store(:limit, view_limit)
+            end
+          end
+
           if pagination and q_page_size >= 1
             q_total_pages = (q_total_records/q_page_size).ceil       
           end
-          q_data = the_model.all(query.merge(query_limit))
+                                                             
+          if vc.comparison.nil?
+            q_data = the_model.all(query_order.merge(query_limit))
+          else
+            q_data = vc.comparison.build_datamapper(the_model, query_order.merge(query_limit))
+          end
+        
         end
-      
+
       end
 
       return {:summary => {:total_records => q_total_records, :total_pages => q_total_pages, :current_page => q_page }, :data => q_data}     
@@ -177,7 +163,7 @@ module ContentManagerSystem
     def view_conditions(arguments_values='', context={})
     
       unless @processed_conditions 
-        if not query_conditions.nil?
+        if not query_conditions.nil? and not query_conditions.empty?
           @the_view_conditions = ViewQueryConditions.new(query_conditions, view_arguments, arguments_values, context)
         end
       end

@@ -1,5 +1,6 @@
 require 'data_mapper' unless defined?DataMapper
 require 'ysd_md_publishable'
+require 'ysd_md_search' unless defined?Model::Searchable
 
 module ContentManagerSystem
 
@@ -54,6 +55,7 @@ module ContentManagerSystem
   class Comment
     include DataMapper::Resource
     include Publishable
+    include Model::Searchable  # Searchable
     
     storage_names[:default] = 'cms_comments'
         
@@ -63,7 +65,7 @@ module ContentManagerSystem
     belongs_to :comment_set, 'ContentManagerSystem::CommentSet', :child_key => [:comment_set_id], :parent_key => [:id]
     belongs_to :parent_comment, 'ContentManagerSystem::Comment', :child_key => [:parent_id], :parent_key => [:id], :required => false
         
-    alias old_save save
+    searchable [:message]
     
     #
     # Before saving a comment, initializes the comment date
@@ -89,7 +91,7 @@ module ContentManagerSystem
             self.comment_set = CommentSet.get(comment_set_id)         
           end
         end
-        old_save
+        super
         transaction.commit
       end
       

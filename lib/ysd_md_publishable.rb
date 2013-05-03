@@ -242,6 +242,18 @@ module ContentManagerSystem
       @the_composer_user ||= (Users::Profile.get(composer_username) || Users::Profile.ANONYMOUS_USER)
 
     end
+    
+    #
+    # Exporting the composer user
+    # 
+    def as_json(options={})
+
+      methods = options[:methods] || []
+      methods << :composer_user
+
+      super(options.merge(:methods => methods))
+
+    end
 
     private
 

@@ -1,6 +1,0 @@
-require 'ysd_md_route'
-require 'ysd_md_breadcrumb'
-require 'ysd_md_breadcrumb_builder'
-require 'ysd_md_menu'
-require 'ysd_md_menu_item'
-require 'ysd_md_menu_item_translation'
