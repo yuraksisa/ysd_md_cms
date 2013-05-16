@@ -32,7 +32,7 @@ module ContentManagerSystem
       
       content = nil
     
-      if content_translation = ::ContentManagerSystem::Translation::ContentTranslation.get(key)
+      if content_translation = ::ContentManagerSystem::Translation::ContentTranslation.get(id)
         
         translated_attributes = {}
         

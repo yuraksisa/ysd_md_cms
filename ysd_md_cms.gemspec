@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name    = "ysd_md_cms"
-  s.version = "0.2.27"
+  s.version = "0.2.29"
   s.authors = ["Yurak Sisa Dream"]
   s.date    = "2011-08-23"
   s.email   = ["yurak.sisa.dream@gmail.com"]
@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "ysd_md_profile"       # Block permissions
   s.add_runtime_dependency "ysd_md_audit"         # Audit (content)
   s.add_runtime_dependency "ysd_md_rac"           # Resource Access Control (content)
-  s.add_runtime_dependency "ysd_md_translation"   # Translation (content, term)
+  s.add_runtime_dependency "ysd_md_translation"   # Translation
   s.add_runtime_dependency "ysd_md_system"        # System
   s.add_runtime_dependency "ysd_md_search"        # Search engine   
   s.add_runtime_dependency "ysd_core_plugins"     # Plugins (content type aspects)

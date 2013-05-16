@@ -45,7 +45,7 @@ module ContentManagerSystem
     property :header, Text, :field => 'header' # Header text
     property :footer, Text, :field => 'footer' # Footer text
     property :script, Text, :field => 'script' # Script 
-    property :style, Text, :field => 'style'   # Style
+    property :page_style, Text, :field => 'page_style'   # Style
     property :url, String, :field => 'url', :length => 256    # The url from which it can be accessed
     
     # Other view options
@@ -84,7 +84,7 @@ module ContentManagerSystem
         if vc.comparison.nil?
             q_total_records = the_model.count
         else
-            q_total_records = vc.comparison.count_datamapper(the_model)
+            q_total_records = vc.comparison.build_datamapper(the_model).all.count 
         end
 
         q_page_size = q_total_records if q_page_size == 0
@@ -286,7 +286,7 @@ module ContentManagerSystem
         conditions = opts['conditions'].map do |condition|
                        process_comparison(condition)
                      end
-        
+
         conditions.delete_if { |condition| condition.nil? } # remove nil conditions (not arguments supplied)
         
         conditions = if conditions.length > 1
@@ -312,14 +312,15 @@ module ContentManagerSystem
         
         comparison = nil
         value = opts['value']
-        
         if value.kind_of?(String)
-          argument_in_value, value = process_value(value)       
-          if argument_in_value # the condition value includes an argument
+          argument_in_value, value = process_value(value)  
+          if argument_in_value 
             if value.nil?
               check_none_supplied_argument(argument_in_value)
             else
-              comparison = Conditions::Comparison.new(opts['field'], opts['operator'], value) if check_supplied_argument(argument_in_value, value)
+              if check_supplied_argument(argument_in_value, value)
+                comparison = Conditions::Comparison.new(opts['field'], opts['operator'], value) 
+              end
             end
           else
             comparison = Conditions::Comparison.new(opts['field'], opts['operator'], eval_value(value))
@@ -410,21 +411,21 @@ module ContentManagerSystem
       # @param [Object]
       #   The condition value
       #
-      # @return [Object]
+      # @return [Array]
       #   The condition value after replace it with arguments or the value if it's a primitive value
       #   return nil if the value implies a argument replacement and it doesn't be 
       #
       def process_value(value)
         
-        if argument = argument_in_value(value)
-          if view_arguments.has_key?(argument) and arguments_values.has_key?(argument.to_sym)
-            value = view_arguments[argument].typecast(value % arguments_values)
-          else
-            value = nil
-          end
-        end
+        result = if argument = argument_in_value(value)
+                   if view_arguments.has_key?(argument) and arguments_values.has_key?(argument.to_sym)
+                     view_arguments[argument].typecast(value % arguments_values)
+                   end
+                 else
+                   value
+                 end
 
-        return [argument, value]
+        return [argument, result]
 
       end
 
@@ -437,13 +438,9 @@ module ContentManagerSystem
       #
       def argument_in_value(value)
         
-        argument_id = nil
-
         if condition_argument=value.match(/\{(\d+)\}/)
-          argument_id = condition_argument[1] 
+          condition_argument[1] 
         end
-
-        return argument_id
 
       end
 
@@ -454,7 +451,7 @@ module ContentManagerSystem
       #   The key is the element order and the value is the element value
       #
       def extract_arguments(arguments='')
-      
+        
         arguments ||= ''
         a_arguments = arguments.split("/")
         a_arguments.delete('')    

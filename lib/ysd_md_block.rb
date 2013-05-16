@@ -26,6 +26,8 @@ module ContentManagerSystem
     property :show_block_on_page, Integer, :field => 'show_block_on_page', :default => 1 # 1-all pages except list 2-only listed pages
     property :show_block_on_page_list, Text, :field => 'show_block_on_page_list'
     
+    property :show_title, Boolean, :field => 'show_title', :default => false
+
     has n, :block_usergroups, 'BlockUserGroup', :child_key => [:block_id] , :parent_key => [:id], :constraint => :destroy
     has n, :usergroups, 'Users::Group', :through => :block_usergroups, :via => :usergroup
 
