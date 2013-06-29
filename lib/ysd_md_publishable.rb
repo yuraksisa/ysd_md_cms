@@ -250,6 +250,7 @@ module ContentManagerSystem
 
       methods = options[:methods] || []
       methods << :composer_user
+      methods << :publication_info
 
       super(options.merge(:methods => methods))
 

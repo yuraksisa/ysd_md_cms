@@ -22,37 +22,54 @@ module ContentManagerSystem
     
     property :weight, Integer, :field => 'weight', :default => 0
     property :title, String, :field => 'title', :length => 64
-    
+    property :show_title, Boolean, :field => 'show_title', :default => false
+
+    property :visibility_condition, Text, :field => 'visibility_condition'
+
     property :show_block_on_page, Integer, :field => 'show_block_on_page', :default => 1 # 1-all pages except list 2-only listed pages
     property :show_block_on_page_list, Text, :field => 'show_block_on_page_list'
     
-    property :show_title, Boolean, :field => 'show_title', :default => false
-
     has n, :block_usergroups, 'BlockUserGroup', :child_key => [:block_id] , :parent_key => [:id], :constraint => :destroy
     has n, :usergroups, 'Users::Group', :through => :block_usergroups, :via => :usergroup
 
-    alias old_save save
+    has n, :block_content_types, 'BlockContentType', :child_key => [:block_id], :parent_key => [:id], :constraint => :destroy
+    has n, :content_types, 'ContentType', :through => :block_content_types, :via => :content_type
     
     #
     # Override the save method to check the usergroups associated to the block
     #
     def save
       
-      check_usergroups! if self.usergroups and (not self.usergroups.empty?)
+      transaction do |transaction|
+        check_usergroups! if self.usergroups and (not self.usergroups.empty?)
+        check_content_types! if self.content_types and (not self.content_types.empty?)
+        super
+        transaction.commit
+      end
 
-      old_save
-      
     end
 
     #
     # Check if the block should be shown
     # 
+    # @param [User] the user
+    # @param [String] the URL from which the block will be shown
+    # @param [String] the content type
+    #
     # @return [Boolean]
     #   true if the block can be show for the user and path
     #
-    def can_be_shown?(user, path)
+    def can_be_shown?(user, path, content_type_id)
     
-      check_user?(user) and check_path?(path)    
+      if visibility_condition.nil? or visibility_condition.empty?
+        check_user?(user) and check_path?(path) and check_content_type_id?(content_type_id) 
+      else
+        condition = visibility_condition.gsub('user','#{check_user?(user)}').
+          gsub('path','#{check_path?(path)}').
+          gsub('content_type','#{check_content_type_id?(content_type_id)}')
+        #p "CONDITION :#{condition} *#{content_type_id}* : #{eval('"'<<condition<<'"')} : #{eval(eval('"'<<condition<<'"'))}"
+        eval(eval('"'<<condition<<'"'))
+      end   
     
     end
                    
@@ -64,15 +81,17 @@ module ContentManagerSystem
     #    {:name => 'myblock', :module_name => 'module where the block is defined' , :theme => 'theme'}
     #
     def self.rehash_blocks(blocks)
-    
-      Block.all.each do |block| # Remove the not existing blocks
+      
+      # Remove the not existing blocks
+      Block.all.each do |block| 
         unless blocks.index {|b| b[:name] == block.name and b[:module_name] == block.module_name.to_sym and b[:theme]==block.theme}
           block.destroy
         end 
       end
       
-      blocks.each do |block| # Create the not existing blocks
-        Block.first_or_create(block)    
+      # Create the not existing blocks
+      blocks.each do |block| 
+        Block.first_or_create({:name => block[:name]}, block)    
       end
     
     end
@@ -84,11 +103,12 @@ module ContentManagerSystem
     # @param [Array] The regions
     # @param [User] The user
     # @param [String] The path
+    # @param [String] content type id
     #
     # @return [Hash] The key is the region and the value is an array of Block
     # to show on the region
     #
-    def self.active_blocks(theme, regions, user, path)
+    def self.active_blocks(theme, regions, user, path, content_type_id)
       
       result = {}
 
@@ -98,7 +118,7 @@ module ContentManagerSystem
       blocks.each do |block|
         region = block.region.to_sym
         result.store(region, []) unless result.has_key?(region)
-        result[region].push(block) if block.can_be_shown?(user, path)          
+        result[region].push(block) if block.can_be_shown?(user, path, content_type_id)          
       end
 
       return result
@@ -112,6 +132,7 @@ module ContentManagerSystem
 
       relationships = options[:relationships] || {}
       relationships.store(:usergroups, {})
+      relationships.store(:content_types, {})
 
       super(options.merge(:relationships => relationships))
 
@@ -120,7 +141,7 @@ module ContentManagerSystem
     private
     
     #
-    # Preprocess the user groups and loads if they exists
+    # Preprocess the user groups and loads if they exist
     #
     def check_usergroups!
 
@@ -135,15 +156,29 @@ module ContentManagerSystem
     end
 
     #
+    # Preprocess the content types and loads if they exist
+    #
+    def check_content_types!
+
+      self.content_types.map! do |ct|
+        if (not ct.saved?) and loaded_content_type = ContentType.get(ct.id)
+          loaded_content_type
+        else
+          ct
+        end
+      end
+
+    end
+
+
+    #
     # Check if the block is shown for the user
     # 
     def check_user?(user)
    
       can_show = false
-      
-      # check the user    
-        
-      if (not can_show) and (not user.nil?)
+              
+      if not user.nil?
         can_show = (BlockUserGroup.count('block.id'=>id, 'usergroup.group' => user.usergroups.map{|ug| ug.group} ) > 0)
       end
       
@@ -183,6 +218,17 @@ module ContentManagerSystem
       
     end
     
+    #
+    # Check if the block can be shown for the content_type
+    #
+    def check_content_type_id?(content_type_id) 
+
+       #content_type_id.nil? or
+       BlockContentType.count('block.id' => id) == 0 or
+       BlockContentType.count('block.id' => id, 'content_type.id' => content_type_id) > 0
+
+    end
+
   end
 end   
     

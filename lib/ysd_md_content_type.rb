@@ -69,7 +69,7 @@ module ContentManagerSystem
     # Overwritten to store the assigned aspects
     #
     def attributes=(attributes)
-      @assigned_aspects = attributes.delete(:aspects)
+      @assigned_aspects = attributes.delete(:aspects) if attributes.has_key?(:aspects)
       super(attributes)
     end
 

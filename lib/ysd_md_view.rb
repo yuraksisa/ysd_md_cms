@@ -39,6 +39,10 @@ module ContentManagerSystem
     property :ajax_pagination, Boolean, :field => 'ajax_pagination', :default => false # The pagination is done by ajax request
     property :page_size, Integer, :field => 'page_size', :default => 0       # The page size
     property :pager, String, :field => 'pager', :length => 20, :default => 'default'
+    property :show_number_of_results, Boolean, :field => 'show_number_of_results', :default => false
+    property :num_of_results_text, String, :field => 'num_of_results_text', :length => 80
+    property :num_of_results_no_data_text, String, :field => 'num_of_results_no_data_text', :length => 80
+    property :num_of_results_1_data_text, String, :field => 'num_of_results_1_data_text', :length => 80
 
     # The view page
     property :title, String, :field => 'title', :length => 80 # The view title
@@ -217,7 +221,7 @@ module ContentManagerSystem
   #
   class ViewField
       
-      attr_reader :field, :class, :link, :image, :link_class, :image_class
+      attr_reader :field, :class, :link, :image, :link_class, :image_class, :image_alt
       
       def initialize(opts={})
         
@@ -233,7 +237,7 @@ module ContentManagerSystem
           @image = false
         end
         @image_class = opts['image_class']
-        
+        @image_alt = opts['image_alt']
       end
       
       def evaluate_link(element)
@@ -244,6 +248,14 @@ module ContentManagerSystem
          @link
         end
         
+      end
+
+      def evaluate_image_alt(element)
+        if @image_alt.match('element')
+          eval('"'<<@image_alt<<'"')
+        else
+          @image_alt
+        end
       end
       
   end

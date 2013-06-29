@@ -1,4 +1,5 @@
 require 'data_mapper' unless defined?DataMapper
+require 'ysd_md_yito' unless defined?Yito::Model::Finder
 
 module ContentManagerSystem
   #
@@ -7,11 +8,13 @@ module ContentManagerSystem
   #
   class Template
      include DataMapper::Resource
-          
+     extend Yito::Model::Finder
+
      storage_names[:default] = 'cms_templates'
 
      property :id, Serial
      property :name, String, :length => 80, :unique_index => :cms_templates_name_index
+     property :description, String, :length => 256
      property :text, Text
      
      #

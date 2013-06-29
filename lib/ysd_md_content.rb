@@ -56,6 +56,7 @@ module ContentManagerSystem
     property :author, String, :field => 'author', :length => 80     # The content author
     property :block, Boolean, :field => 'block', :default => false  # Use the content as a block
     property :alias, String, :field => 'alias', :length => 80       # An URL alias to the content
+    property :link, String, :field => 'link', :length => 80         # A link
 
     belongs_to :content_type, :child_key => [:type] , :parent_key => [:id] 
     
