@@ -109,6 +109,14 @@ module ContentManagerSystem
     def aspect(aspect)
       (aspects.select { |content_type_aspect| content_type_aspect.aspect == aspect }).first
     end
+    
+    #
+    # Get the aspect target model class
+    #
+    # @return [Class]
+    def aspect_target_model
+      ContentManagerSystem::Content
+    end
 
     # ------------ Aspects management ---------------
 

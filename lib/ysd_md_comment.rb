@@ -30,7 +30,10 @@ module ContentManagerSystem
     # The comments count
     #
     def comments_count
-      Comment.count({:comment_set_id => self.id})
+
+      Comment.count(:conditions => {
+                           :comment_set => {:id => self.id}, 
+                           :publishing_state_id => :PUBLISHED})
     end
 
     #
@@ -56,6 +59,8 @@ module ContentManagerSystem
     include DataMapper::Resource
     include Publishable
     include Model::Searchable  # Searchable
+    extend  Plugins::ApplicableModelAspect # Extends the entity to allow apply aspects
+    extend  Yito::Model::Finder
     
     storage_names[:default] = 'cms_comments'
         
@@ -102,8 +107,16 @@ module ContentManagerSystem
     #
     def self.find_comments(comment_set_id, limit=10, offset=0)
     
-      data = Comment.all(:comment_set => {:id => comment_set_id}, :order => [:id.desc], :limit => limit, :offset => offset)
-      total = Comment.count(:comment_set_id => comment_set_id)
+      data = Comment.all(:conditions => {
+                           :comment_set => {:id => comment_set_id}, 
+                           :publishing_state_id => :PUBLISHED},
+                         :order => [:id.desc], 
+                         :limit => limit, 
+                         :offset => offset)
+
+      total = Comment.count(:conditions => {
+                              :comment_set => {:id => comment_set_id}, 
+                              :publishing_state_id => :PUBLISHED})
       
       [data, total]
       

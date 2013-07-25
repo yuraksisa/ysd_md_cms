@@ -46,6 +46,12 @@ module ContentManagerSystem
 
     # The view page
     property :title, String, :field => 'title', :length => 80 # The view title
+    property :page_author, String, :field => 'page_author', :length => 80
+    property :page_language, String, :field => 'page_language', :length => 3 
+    property :page_description, Text, :field => 'page_description' 
+    property :page_summary, Text, :field => 'page_summary' 
+    property :page_keywords, Text, :field => 'page_keywords'
+    property :cache_life, Integer, :field => 'cache_life', :default => 0
     property :header, Text, :field => 'header' # Header text
     property :footer, Text, :field => 'footer' # Footer text
     property :script, Text, :field => 'script' # Script 

@@ -57,6 +57,7 @@ module ContentManagerSystem
     property :block, Boolean, :field => 'block', :default => false  # Use the content as a block
     property :alias, String, :field => 'alias', :length => 80       # An URL alias to the content
     property :link, String, :field => 'link', :length => 80         # A link
+    property :cache_life, Integer, :field => 'cache_life', :default => 0 # Cache life
 
     belongs_to :content_type, :child_key => [:type] , :parent_key => [:id] 
     
