@@ -221,7 +221,7 @@ module ContentManagerSystem
     #
     def publishing_state
 
-      @the_publishing_state ||= PublishingState.get(publishing_state_id)
+      PublishingState.get(publishing_state_id)
 
     end
 
@@ -281,9 +281,10 @@ module ContentManagerSystem
     # Check if the publication state is published to assign publishing data
     #
     def check_published
-
+      
       if self.publishing_state == PublishingState::PUBLISHED
         self.publishing_date = Time.now
+        self.publishing_publisher = connected_user.username
       end
 
     end    

@@ -138,6 +138,15 @@ module ContentManagerSystem
 
     end
 
+    # ============
+
+    def categories_to_a
+
+      c = categories.map { |category| category.description }
+      c.join(', ')
+
+    end
+
     # ============ Exporting the objects =================
     
     #

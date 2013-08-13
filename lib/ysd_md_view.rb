@@ -227,12 +227,13 @@ module ContentManagerSystem
   #
   class ViewField
       
-      attr_reader :field, :class, :link, :image, :link_class, :image_class, :image_alt
+      attr_reader :field, :class, :title_class, :link, :image, :link_class, :image_class, :image_alt
       
       def initialize(opts={})
         
         @field = opts['field']
         @class = opts['class']
+        @title_class = opts['title_class']
         
         @link  = opts['link']
         @link_class = opts['link_class']
@@ -246,6 +247,10 @@ module ContentManagerSystem
         @image_alt = opts['image_alt']
       end
       
+      #def evaluate_field()
+      #  if @link.match('#')
+      #end  
+
       def evaluate_link(element)
       
         if @link.match('element')

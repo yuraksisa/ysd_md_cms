@@ -175,9 +175,10 @@ module ContentManagerSystem
 
     COMMENTS_ANONYMOUS_WORKFLOW = new('comments_anonymous', 'Comments workflow (including anonymous users)', PublishingState::INITIAL,
                             [WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user','staff'], ['user','staff']),
-                             WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PENDING_VALIDATION, ['anonymous'], ['staff']),
-                             WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['user', 'staff'], ['staff']),
-                             WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['user', 'staff'], ['staff'])                             
+                             WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PENDING_VALIDATION, ['anonymous'], ['anonymous']),
+                             WorkFlowStep.new(PublishingState::PENDING_VALIDATION, PublishingAction::VALIDATE, PublishingState::PUBLISHED, ['anonymous','staff'], ['staff']),
+                             WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['anonymous', 'user', 'staff'], ['staff']),
+                             WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['anomymous', 'user', 'staff'], ['staff'])                             
                             ]
                             )
 
