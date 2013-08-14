@@ -21,7 +21,8 @@ module ContentManagerSystem
     property :message_on_edit_content, Text, :field => 'message_on_edit_content'
     
     property :display, String, :field => 'display', :length => 40 # Display to render the content
-    property :template, Text, :field => 'template' # Template for creating content
+    property :display_css_class, String, :field => 'display_css_class', :length => 256 # css class 
+    property :template, Text, :field => 'template' # Template for creating a new content
     property :max_length, Integer, :field => 'max_length', :default => 0 # Content max length
 
     has n, :aspects, 'ContentTypeAspect', :child_key => [:content_type_id], :parent_key => [:id], :constraint => :destroy, :order => [:weight.asc]

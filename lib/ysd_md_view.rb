@@ -126,7 +126,8 @@ module ContentManagerSystem
           if vc.comparison.nil?
             q_data = the_model.all(query_order.merge(query_limit))
           else
-            q_data = vc.comparison.build_datamapper(the_model, query_order.merge(query_limit))
+            #q_data = vc.comparison.build_datamapper(the_model, query_order.merge(query_limit))
+            q_data = vc.comparison.build_datamapper(the_model).all(query_order.merge(query_limit))
           end
         
         end
