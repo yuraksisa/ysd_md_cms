@@ -10,6 +10,7 @@ require 'ysd_md_publishing_state'
 require 'ysd_md_content_translation'
 require 'ysd_md_search' unless defined?Model::Searchable
 require 'ysd_dm_finder'
+require 'ysd_data_analysis'
 
 module ContentManagerSystem
 
@@ -157,6 +158,7 @@ module ContentManagerSystem
       methods = options[:methods] || []
       methods << :categories_by_taxonomy
       methods << :translated_categories
+      methods << :excerpt
 
       relationships = options[:relationships] || {}
       relationships.store(:content_type, {})
@@ -183,6 +185,15 @@ module ContentManagerSystem
         
         result 
       end    
+
+    end
+    
+    #
+    # Retrieve a excerpt of the body
+    #
+    def excerpt(words_count=50)
+      
+      HTMLAnalysis.new(body).plain_text.split(%r{\s+}).take(words_count).join(' ').strip
 
     end
 

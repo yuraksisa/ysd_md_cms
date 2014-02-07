@@ -108,7 +108,7 @@ module ContentManagerSystem
     # @return [Hash] The key is the region and the value is an array of Block
     # to show on the region
     #
-    def self.active_blocks(theme, regions, user, path, content_type_id)
+    def self.active_blocks(theme, regions, user, path, content_type_id=nil)
       
       result = {}
 
