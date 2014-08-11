@@ -77,7 +77,12 @@ module ContentManagerSystem
         check_content_type! if self.content_type # Update the content type
         check_categories!   if self.categories and not self.categories.empty? # Update the categories
         
-        super # Invokes the super class
+        begin   
+          super # Invokes the super class        
+        rescue DataMapper::SaveFailureError => error
+          p "Error saving content #{error} #{self.errors.inspect}"
+          raise error 
+        end
 
         transaction.commit
 
