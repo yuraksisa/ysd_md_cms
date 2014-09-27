@@ -13,6 +13,7 @@ module Site
     property :description, String, :field => 'description', :length => 256
     property :render_css_class, String, :field => 'render_class', :length => 256
     property :render_item_separator, String, :field => 'render_separator', :length => 80
+    property :language_in_routes, Boolean, :field => 'language_in_routes', :default => true
 
     has n, :menu_items, 'Site::MenuItem', :child_key => [:menu_name], :parent_key => [:name]
     
