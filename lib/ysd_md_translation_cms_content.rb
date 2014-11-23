@@ -37,8 +37,15 @@ module ContentManagerSystem
             if content_translation
               content_translation.set_translated_attributes(language_code, attributes)
             else
-              translation = Model::Translation::Translation.create_with_terms(language_code, attributes) 
-              content_translation = ContentTranslation.create({:content => ContentManagerSystem::Content.get(content_id), :translation => translation})
+              begin
+                translation = Model::Translation::Translation.create_with_terms(language_code, attributes) 
+                content = ContentManagerSystem::Content.get(content_id)
+                content_translation = ContentTranslation.new({:content => content, :translation => translation})
+                content_translation.save
+              rescue  DataMapper::SaveFailureError => error
+                p "ERRORS: #{error} cvalid: #{content.valid?} valid: #{content_translation.valid?}"
+                raise error 
+              end
             end
             
           end
