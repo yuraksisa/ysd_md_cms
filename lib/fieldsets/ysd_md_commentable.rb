@@ -11,7 +11,7 @@ module ContentManagerSystem
        def self.included(model)
 
          if model.respond_to?(:property)
-           #model.property :comments_open, Object, :field => 'comments_open' # Check that the users can create comments (CHECK TODO)
+           #model.property :comments_opened, Boolean # The users can create comments
          end
 
        end

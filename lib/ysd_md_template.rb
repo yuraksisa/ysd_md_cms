@@ -1,6 +1,7 @@
 require 'data_mapper' unless defined?DataMapper
 require 'ysd_md_yito' unless defined?Yito::Model::Finder
 require 'ysd_md_audit' unless defined?Audit::Auditor
+require 'ysd_md_template_translation'
 
 module ContentManagerSystem
   #
@@ -11,6 +12,7 @@ module ContentManagerSystem
      include DataMapper::Resource
      extend Yito::Model::Finder
      include Audit::Auditor       # Extends the model to Audit
+     include TemplateTranslation
 
      storage_names[:default] = 'cms_templates'
 

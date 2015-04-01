@@ -91,7 +91,6 @@ module ContentManagerSystem
       transaction do |transaction|
         if comment_set and not comment_set.saved?
           if comment_set.id 
-            puts "comment set exists #{comment_set.id}"
             comment_set_id = comment_set.id
             self.comment_set = CommentSet.get(comment_set_id)         
           end
