@@ -19,7 +19,7 @@ module ContentManagerSystem
      property :id, Serial
      property :name, String, :length => 80, :unique_index => :cms_templates_name_index
      property :description, String, :length => 256
-     property :text, Text
+     property :text, Text, :length => 500000
      
      #
      # Find a template by its name
