@@ -213,6 +213,12 @@ module ContentManagerSystem
 
     end   
 
+    # ============ Request information interface ===========
+
+    def request_information_subject
+      title
+    end
+
     # ============ Path interface ==========================
 
     def path
