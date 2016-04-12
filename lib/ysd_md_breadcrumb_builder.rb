@@ -17,18 +17,22 @@ module Site
       breadcrumb = Breadcrumb.new
       
       route = Routes.instance.get(path) 
-            
+
+      #p "route: #{route.inspect}"
+
       while route  
         breadcrumb.unshift({:path => route.path, :title => route.title})
         route = route.parent      
       end
 
       # Removes the last element (which is the actual page)
-      breadcrumb.pop 
+      #breadcrumb.pop 
       
       # Adds the home element
-      breadcrumb.unshift({:path => '/', :title => app.t.breadcrumb.home})
+      #breadcrumb.unshift({:path => '/', :title => app.t.breadcrumb.home})
       
+      p "breadcrumb: #{breadcrumb}"
+
       return breadcrumb
     
     end

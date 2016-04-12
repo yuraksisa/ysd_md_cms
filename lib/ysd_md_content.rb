@@ -44,12 +44,14 @@ module ContentManagerSystem
     storage_names[:default] = 'cms_contents'
     
     property :id, Serial, :field => 'id', :key => true              # The content id
-
+    
+    property :name, String, :length => 120                          # Page name (to identify)
     property :title, String, :field => 'title', :length => 120      # The content title
     property :body, Text, :field => 'body'                          # The content body (text)
     property :script, Text, :field => 'script'                      # The content script (text)
     property :style, Text, :field => 'style'                        # The content style (text)
     property :subtitle, String, :field => 'subtitle', :length => 80 # The content subtitle
+    property :cover, Text, :field => 'cover'                        # Cover information
     property :description, Text, :field => 'description'            # The content description
     property :summary, Text, :field => 'summary'                    # The content summary
     property :keywords, Text, :field => 'keywords'                  # The key words (important words)

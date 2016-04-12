@@ -48,7 +48,7 @@ module Site
       candidates = []
       
       @routes.each do |route_path, route|
-        
+
           candidates.push(route) if route.regular_expression.match(path) 
         
       end
@@ -69,7 +69,11 @@ module Site
        modules_routes = Plugins::Plugin.plugin_invoke_all('routes', context)
        modules_routes.each do |module_route|
          parent = if module_route.has_key?(:parent_path)
-                    routes.fetch(module_route[:parent_path])
+                    if routes.has_key?(module_route[:parent_path])
+                      routes.fetch(module_route[:parent_path])
+                    else
+                      nil
+                    end
                   else
                     nil
                   end

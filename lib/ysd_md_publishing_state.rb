@@ -16,7 +16,7 @@ module ContentManagerSystem
     # Retrieve all the states
     #
     def self.all
-      return STATES
+      return STATES.select { |item| item != INITIAL }
     end
 
     #
