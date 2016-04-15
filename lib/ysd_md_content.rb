@@ -45,7 +45,7 @@ module ContentManagerSystem
     
     property :id, Serial, :field => 'id', :key => true              # The content id
     
-    property :name, String, :length => 120                          # Page name (to identify)
+    property :content_name, String, :length => 120        # Page name (to identify)
     property :title, String, :field => 'title', :length => 120      # The content title
     property :body, Text, :field => 'body'                          # The content body (text)
     property :script, Text, :field => 'script'                      # The content script (text)
