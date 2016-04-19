@@ -2,6 +2,36 @@ require "ysd_md_translation_cms_content"
 
 module ContentManagerSystem
   
+  module ContentTranslationClass
+
+    #
+    # Find a content by its translation value of alias
+    #
+    def content_by_translation_alias(alias_value)
+      
+      if alias_value.nil? or alias_value.empty?
+        return nil
+      end
+      
+      query = <<-QUERY
+        select ttt.translated_text as alias, tct.content_id as content_id 
+        from trans_translation_term ttt 
+        join trans_translation tt on ttt.translation_id = tt.id 
+        join trans_content_translation tct on tct.translation_id = tt.id
+        where ttt.translated_text = ? and ttt.concept = 'alias'
+      QUERY
+
+      content_alias = repository.adapter.select(query, [alias_value])
+
+      if content_alias.size > 0 
+        Content.get(content_alias.first.content_id)
+      else
+        return nil
+      end
+    end
+
+  end
+
   #
   # Reopen the class to extend with the content translation
   #
@@ -18,7 +48,7 @@ module ContentManagerSystem
       end
 
     end
-  
+    
     #
     # Translate the content into the language code
     #

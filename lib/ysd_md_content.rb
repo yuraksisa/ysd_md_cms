@@ -37,6 +37,7 @@ module ContentManagerSystem
     include Audit::Auditor                           # Extends the model to Audit
     include Publishable                              # Extends the model to manage publication
     include ContentTranslation                       # Extends the model to manage translation
+    extend  ContentTranslationClass                  # Extends the model to manage translation
     include Model::Searchable                        # Searchable
     extend  Plugins::ApplicableModelAspect           # Extends the entity to allow apply aspects
     extend  Yito::Model::Finder
