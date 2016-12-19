@@ -28,5 +28,12 @@ module ContentManagerSystem
        first(:name => name)
      end
 
+     #
+     # Retrieve a excerpt of the body
+     #
+     def excerpt(max_length=50)
+       text[0,max_length]
+     end
+
   end
 end
