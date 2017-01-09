@@ -131,54 +131,54 @@ module ContentManagerSystem
     end
 
     STANDARD_WORKFLOW = new('standard', "Standard publishing (for registered users)", PublishingState::INITIAL,
-                             [WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::SAVE, PublishingState::DRAFT, ['user','staff'], ['user','staff']),
-                               WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user','staff'], ['user','staff']),
-                               WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::SAVE, PublishingState::DRAFT, ['user', 'staff'], ['user', 'staff']),
-                               WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user', 'staff'], ['user','staff']),
-                               WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['user', 'staff'], ['staff']),
-                               WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['user', 'staff'], ['staff'])
+                             [WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::SAVE, PublishingState::DRAFT, ['user','staff','webmaster','editor'], ['user','staff','webmaster','editor']),
+                               WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user','staff','webmaster','editor'], ['user','staff','webmaster','editor']),
+                               WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::SAVE, PublishingState::DRAFT, ['user', 'staff','webmaster','editor'], ['user', 'staff','webmaster','editor']),
+                               WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user', 'staff','webmaster','editor'], ['user','staff','webmaster','editor']),
+                               WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['user', 'staff','webmaster','editor'], ['staff','webmaster','editor']),
+                               WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['user', 'staff','webmaster','editor'], ['staff','webmaster','editor'])
                               ])
 
     STANDARD_ANONYMOUS_WORKFLOW = new('standard_anonymous', 'Standard publishing (including anoymous users)', PublishingState::INITIAL,
                              [WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PENDING_CONFIRMATION, ['anonymous'],['anonymous']),
-                              WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::SAVE, PublishingState::DRAFT, ['user','staff'], ['user', 'staff']),
-    	                        WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user', 'staff'], ['user', 'staff']),
-                              WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::SAVE, PublishingState::DRAFT, ['user', 'staff'], ['user', 'staff']),
-                              WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user', 'staff'], ['user', 'staff']),
+                              WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::SAVE, PublishingState::DRAFT, ['user','staff','webmaster','editor'], ['user', 'staff','webmaster','editor']),
+    	                        WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user', 'staff','webmaster','editor'], ['user', 'staff','webmaster','editor']),
+                              WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::SAVE, PublishingState::DRAFT, ['user', 'staff','webmaster','editor'], ['user', 'staff','webmaster','editor']),
+                              WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user', 'staff','webmaster','editor'], ['user', 'staff','webmaster','editor']),
                               WorkFlowStep.new(PublishingState::PENDING_CONFIRMATION, PublishingAction::CONFIRM, PublishingState::PUBLISHED, ['anonymous'], ['anonymous']),
-    	                        WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['anonymous', 'user', 'staff'], ['staff']),
-                              WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::SAVE, PublishingState::PUBLISHED, ['anonymous', 'user', 'staff'], ['anonymous', 'user', 'staff']),
-    	                        WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['anonymous', 'user', 'staff'], ['staff'])
+    	                        WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['anonymous', 'user', 'staff','webmaster','editor'], ['staff','webmaster','editor']),
+                              WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::SAVE, PublishingState::PUBLISHED, ['anonymous', 'user', 'staff','webmaster','editor'], ['anonymous', 'user', 'staff','webmaster','editor']),
+    	                        WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['anonymous', 'user', 'staff','webmaster','editor'], ['staff','webmaster','editor'])
     	                       ])
 
     VALIDATION_WORKFLOW = new('validation', 'Validation: Staff validates content before its published', PublishingState::INITIAL,
-    	                        [WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::SAVE, PublishingState::DRAFT, ['user','staff'], ['user','staff']),
+    	                        [WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::SAVE, PublishingState::DRAFT, ['user','staff','webmaster','editor'], ['user','staff','webmaster','editor']),
                                WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PENDING_CONFIRMATION, ['anonymous'], ['anonymous']),  	                         
-                               WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PENDING_VALIDATION, ['user'], ['user']),
-    	                         WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['anonymous','user','staff'], ['staff']),
-                               WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::PUBLISH, PublishingState::PENDING_VALIDATION, ['user'], ['user']),
-                               WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user','staff'], ['staff']),
+                               WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PENDING_VALIDATION, ['user','webmaster','editor'], ['user','webmaster','editor']),
+    	                         WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['anonymous','user','staff','webmaster','editor'], ['staff','webmaster','editor']),
+                               WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::PUBLISH, PublishingState::PENDING_VALIDATION, ['user','webmaster','editor'], ['user','webmaster','editor']),
+                               WorkFlowStep.new(PublishingState::DRAFT, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user','staff','webmaster','editor'], ['staff','webmaster','editor']),
     	                         WorkFlowStep.new(PublishingState::PENDING_CONFIRMATION, PublishingAction::CONFIRM, PublishingState::PENDING_VALIDATION, ['anonymous'], ['anonymous']),
-    	                         WorkFlowStep.new(PublishingState::PENDING_VALIDATION, PublishingAction::VALIDATE, PublishingState::PUBLISHED, ['anonymous','user'], ['staff']),
-    	                         WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['anonymous','user','staff'], ['staff']),
-                               WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::SAVE, PublishingState::PENDING_VALIDATION, ['anonymous', 'user'], ['staff']),
-                               WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::SAVE, PublishingState::PUBLISHED, ['staff'], ['staff']),
-    	                         WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['anonymous','user','staff'], ['staff'])
+    	                         WorkFlowStep.new(PublishingState::PENDING_VALIDATION, PublishingAction::VALIDATE, PublishingState::PUBLISHED, ['anonymous','user','webmaster','editor'], ['staff','webmaster','editor']),
+    	                         WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['anonymous','user','staff','webmaster','editor'], ['staff','webmaster','editor']),
+                               WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::SAVE, PublishingState::PENDING_VALIDATION, ['anonymous', 'user','webmaster','editor'], ['staff','webmaster','editor']),
+                               WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::SAVE, PublishingState::PUBLISHED, ['staff','webmaster','editor'], ['staff','webmaster','editor']),
+    	                         WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['anonymous','user','staff','webmaster','editor'], ['staff','webmaster','editor'])
     	                        ])    	
 
     COMMENTS_WORKFLOW = new('comments', 'Comments workflow (for registered users)', PublishingState::INITIAL,
-                            [WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user','staff'], ['user','staff']),
-                             WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['user', 'staff'], ['staff']),
-                             WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['user', 'staff'], ['staff'])                             
+                            [WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user','staff','webmaster','editor'], ['user','staff','webmaster','editor']),
+                             WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['user', 'staff','webmaster','editor'], ['staff','webmaster','editor']),
+                             WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['user', 'staff','webmaster','editor'], ['staff','webmaster','editor'])                             
                             ]
                             )
 
     COMMENTS_ANONYMOUS_WORKFLOW = new('comments_anonymous', 'Comments workflow (including anonymous users)', PublishingState::INITIAL,
-                            [WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user','staff'], ['user','staff']),
+                            [WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PUBLISHED, ['user','staff','webmaster','editor'], ['user','staff','webmaster','editor']),
                              WorkFlowStep.new(PublishingState::INITIAL, PublishingAction::PUBLISH, PublishingState::PENDING_VALIDATION, ['anonymous'], ['anonymous']),
-                             WorkFlowStep.new(PublishingState::PENDING_VALIDATION, PublishingAction::VALIDATE, PublishingState::PUBLISHED, ['anonymous','staff'], ['staff']),
-                             WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['anonymous', 'user', 'staff'], ['staff']),
-                             WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['anomymous', 'user', 'staff'], ['staff'])                             
+                             WorkFlowStep.new(PublishingState::PENDING_VALIDATION, PublishingAction::VALIDATE, PublishingState::PUBLISHED, ['anonymous','staff','webmaster','editor'], ['staff','webmaster','editor']),
+                             WorkFlowStep.new(PublishingState::PUBLISHED, PublishingAction::BAN, PublishingState::BANNED, ['anonymous', 'user', 'staff','webmaster','editor'], ['staff','webmaster','editor']),
+                             WorkFlowStep.new(PublishingState::BANNED, PublishingAction::ALLOW, PublishingState::PUBLISHED, ['anomymous', 'user', 'staff','webmaster','editor'], ['staff','webmaster','editor'])                             
                             ]
                             )
 
