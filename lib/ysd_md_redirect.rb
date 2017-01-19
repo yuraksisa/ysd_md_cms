@@ -12,6 +12,7 @@ module ContentManagerSystem
 
     property :source, String, :length => 255 
     property :destination, String, :length => 255
+    property :redirection_type, Integer
 
   end
 end
