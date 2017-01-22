@@ -62,6 +62,7 @@ module ContentManagerSystem
     property :alias, String, :field => 'alias', :length => 80       # An URL alias to the content
     property :link, String, :field => 'link', :length => 80         # A link
     property :cache_life, Integer, :field => 'cache_life', :default => 0 # Cache life
+    property :title_anchor_link, String, :field => 'title_anchor_link', :length => 80 # The title meta
 
     belongs_to :content_type, :child_key => [:type] , :parent_key => [:id] 
     
