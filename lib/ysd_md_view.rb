@@ -252,10 +252,11 @@ module ContentManagerSystem
       #  if @link.match('#')
       #end  
 
-      def evaluate_link(element)
+      def evaluate_link(element, multilanguage_site, language)
       
         if @link.match('element')
-         eval('"'<<@link<<'"') 
+         language_prefix = (multilanguage_site and language) ? "/#{language}" : ""
+         language_prefix + eval('"'<<@link<<'"') 
         else
          @link
         end
