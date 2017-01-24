@@ -47,6 +47,7 @@ module ContentManagerSystem
     property :id, Serial, :field => 'id', :key => true              # The content id
     
     property :content_name, String, :length => 120        # Page name (to identify)
+    property :page_title, String, :field => 'page_title', :length => 120 # The page title
     property :title, String, :field => 'title', :length => 120      # The content title
     property :body, Text, :field => 'body'                          # The content body (text)
     property :script, Text, :field => 'script'                      # The content script (text)
@@ -100,6 +101,10 @@ module ContentManagerSystem
       
       if self.alias.nil? or self.alias.empty?     
         self.alias = File.join('/', self.content_type.id.downcase, Time.now.strftime('%Y%m%d') , UnicodeUtils.nfkd(self.title).gsub(/[^\x00-\x7F]/,'').gsub(/\s/,'-'))
+      end
+
+      if self.page_title.nil? or self.page_title.empty?
+        self.page_title = title
       end
 
     end
