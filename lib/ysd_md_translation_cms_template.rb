@@ -40,7 +40,7 @@ module ContentManagerSystem
               begin
                 translation = Model::Translation::Translation.create_with_terms(language_code, attributes) 
                 template = ContentManagerSystem::Template.get(template_id)
-                template_translation = ContentTranslation.new({:template => template, :translation => translation})
+                template_translation = TemplateTranslation.new({:template => template, :translation => translation})
                 template_translation.save
               rescue  DataMapper::SaveFailureError => error
                 p "ERRORS: #{error} template valid: #{template.valid?} translation valid: #{template_translation.valid?}"
