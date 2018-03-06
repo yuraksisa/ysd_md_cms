@@ -23,7 +23,9 @@ module Site
     
     belongs_to :parent, 'Site::MenuItem', :child_key => [:parent_id], :parent_key => [:id], :required => false # The parent menu item
     has n,   :children, 'Site::MenuItem', :child_key => [:parent_id], :parent_key => [:id] # The children menu items     
-  
+
+    belongs_to :content, 'ContentManagerSystem::Content', child_key: [:content_id], parent_key: [:id], required: false # The content tied to the menu item
+
     alias old_save save
     
     def save
@@ -35,7 +37,11 @@ module Site
       if self.parent and not self.parent.saved?
         self.parent = MenuItem.get(self.parent.id)
       end
-    
+
+      if self.content and not self.content.saved?
+        self.content = ContentManagerSystem::Content.get(self.content.id)
+      end
+
       old_save
     
     end
