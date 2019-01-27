@@ -23,15 +23,15 @@ module ContentManagerSystem
     
     # The view query
     property :model_name, String, :field => 'model_name', :length => 256 # The model which will be used to retrieve the data            
-    property :query_conditions, Json, :field => 'query_conditions', :required => false, :default => {}
-    property :query_order, Json, :field => 'query_order', :required => false, :default => []
-    property :query_arguments, Json, :field => 'query_arguments', :required => false, :default => []
+    property :query_conditions, Json, :field => 'query_conditions', :required => false, :default => {}, :lazy => false
+    property :query_order, Json, :field => 'query_order', :required => false, :default => [], :lazy => false
+    property :query_arguments, Json, :field => 'query_arguments', :required => false, :default => [], :lazy => false
     
     # The view style
-    property :style, String, :field => 'style', :length => 10                      # The style of the view (teaser, fields, ...)
-    property :v_fields, Json, :field => 'v_fields', :required => false, :default => [] # The fields   
-    property :render, String, :field => 'render', :length => 10                    # The render which will be used
-    property :render_options, Json, :field => 'render_options', :required => false, :default => {} # The render options
+    property :style, String, :field => 'style', :length => 10, :default => 'teaser'   # The style of the view (teaser, fields, ...)
+    property :v_fields, Json, :field => 'v_fields', :required => false, :default => [], :lazy => false # The fields   
+    property :render, String, :field => 'render', :length => 10, :default => 'teaser'  # The render which will be used
+    property :render_options, Json, :field => 'render_options', :required => false, :default => {}, :lazy => false # The render options
     
     # The view result/pagination
     property :view_limit, Integer, :field => 'view_limit', :default => 0     # To limit the number of elements to retrieve
@@ -107,7 +107,7 @@ module ContentManagerSystem
           end
 
           query_limit = {}
-          if (q_page < 1) or (q_page > (q_total_records/q_page_size))
+          if (q_page < 1) or (q_page > (q_total_records.to_f/q_page_size).ceil)
             q_page = 1
           end
           if pagination
@@ -120,7 +120,7 @@ module ContentManagerSystem
           end
 
           if pagination and q_page_size >= 1
-            q_total_pages = (q_total_records/q_page_size).ceil       
+            q_total_pages = (q_total_records.to_f/q_page_size).ceil       
           end
                                                              
           if vc.comparison.nil?

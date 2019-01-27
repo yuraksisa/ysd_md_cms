@@ -15,7 +15,7 @@ module Site
     property :render_item_separator, String, :field => 'render_separator', :length => 80
     property :language_in_routes, Boolean, :field => 'language_in_routes', :default => true
 
-    has n, :menu_items, 'Site::MenuItem', :child_key => [:menu_name], :parent_key => [:name]
+    has n, :menu_items, 'Site::MenuItem', :child_key => [:menu_name], :parent_key => [:name], order: [:weight.asc]
     
     #
     # Retrieve the root menu items

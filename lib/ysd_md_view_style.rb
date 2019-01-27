@@ -6,7 +6,7 @@ module Model
   # There are two view styles:
   #
   #   - teaser : It uses a predefined template 
-  #   - fields : It uses a field selection to render the view
+  #   - thumbnail : It uses a field selection to render the view
   #	
   class ViewStyle
 
@@ -48,8 +48,8 @@ module Model
       
     end  
 
-    VIEW_STYLE_TEASER = new(:teaser, 'Vista predefinida')
-    VIEW_STYLE_FIELDS = new(:fields, 'Selección de campos del modelo a mostrar')
+    VIEW_STYLE_TEASER = new(:teaser, 'Blog')
+    VIEW_STYLE_THUMBNAIL = new(:thumbnail, 'Imagen')
 
   end #ViewStyle
 end #Model

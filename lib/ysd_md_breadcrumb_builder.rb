@@ -31,7 +31,7 @@ module Site
       # Adds the home element
       #breadcrumb.unshift({:path => '/', :title => app.t.breadcrumb.home})
       
-      p "breadcrumb: #{breadcrumb}"
+      #p "breadcrumb: #{breadcrumb}"
 
       return breadcrumb
     
