@@ -7,21 +7,23 @@ module ContentManagerSystem
     #
     # Find a content by its translation value of alias
     #
-    def content_by_translation_alias(alias_value)
+    def content_by_translation_alias(alias_value, force_trailing_slash=false)
       
       if alias_value.nil? or alias_value.empty?
         return nil
       end
+
+      alias_value_trailing_slash = force_trailing_slash ? "#{alias_value}/" : alias_value
       
       query = <<-QUERY
         select ttt.translated_text as alias, tct.content_id as content_id 
         from trans_translation_term ttt 
         join trans_translation tt on ttt.translation_id = tt.id 
         join trans_content_translation tct on tct.translation_id = tt.id
-        where ttt.translated_text = ? and ttt.concept = 'alias'
+        where (ttt.translated_text = ? or ttt.translated_text = ?) and ttt.concept = 'alias'
       QUERY
 
-      content_alias = repository.adapter.select(query, [alias_value])
+      content_alias = repository.adapter.select(query, alias_value, alias_value_trailing_slash)
 
       if content_alias.size > 0 
         Content.get(content_alias.first.content_id)

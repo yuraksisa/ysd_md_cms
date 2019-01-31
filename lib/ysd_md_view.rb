@@ -5,9 +5,13 @@ require 'ysd_md_comparison' unless defined?Conditions::AbstractComparison
 
 module ContentManagerSystem
 
-  # Defines an exception to check when the password is not valid
+  # Defines an exception to check when the view arguments are not supplied
   #
   class ViewArgumentNotSupplied < RuntimeError; end
+
+  # Defines an exception to manage when view page does not exist
+  #
+  class ViewPageNotFound < RuntimeError; end
 
   #
   # It represents a view of data
@@ -122,7 +126,12 @@ module ContentManagerSystem
           if pagination and q_page_size >= 1
             q_total_pages = (q_total_records.to_f/q_page_size).ceil       
           end
-                                                             
+                                             
+          # Control we are not accessing beyond the limit                                                
+          if q_total_pages < page
+            raise ViewPageNotFound
+          end  
+
           if vc.comparison.nil?
             q_data = the_model.all(query_order.merge(query_limit))
           else
